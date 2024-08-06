@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/name: aptos-extractor-coordinator-mainnet
+  name: aptos-extractor-coordinator-mainnet
+  namespace: {{ .Values.mainnet.namespace }}
+spec:
+  replicas: {{ .Values.mainnet.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aptos-extractor-coordinator-mainnet
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aptos-extractor-coordinator-mainnet
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: aptos-extractor-coordinator
+          image: gcr.io/aptos-bq/aptos-indexing-coordinator:{{ .Values.mainnet.image.tag }}
+          env:
+            - name: NODE_ADDRESS
+              value: {{ .Values.mainnet.env.node_address }}
+            - name: FALLBACK_NODE_ADDRESS
+              value: {{ .Values.mainnet.env.fallback_node_address }}
+            - name: GCP_PROJECT_ID
+              value: {{ .Values.mainnet.env.gcp_project_id }}
+            - name: NETWORK
+              value: {{ .Values.mainnet.env.network }}
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/name: aptos-extractor-coordinator-testnet
+  name: aptos-extractor-coordinator-testnet
+  namespace: {{ .Values.testnet.namespace }}
+spec:
+  replicas: {{ .Values.testnet.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aptos-extractor-coordinator-testnet
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aptos-extractor-coordinator-testnet
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+      - name: aptos-extractor-coordinator
+        image: gcr.io/aptos-bq/aptos-indexing-coordinator:{{ .Values.testnet.image.tag }}
+        env:
+          - name: NODE_ADDRESS
+            value: {{ .Values.testnet.env.node_address }}
+          - name: FALLBACK_NODE_ADDRESS
+            value: {{ .Values.mainnet.env.fallback_node_address }}
+          - name: GCP_PROJECT_ID
+            value: {{ .Values.testnet.env.gcp_project_id }}
+          - name: NETWORK
+            value: {{ .Values.testnet.env.network }}
+      restartPolicy: Always

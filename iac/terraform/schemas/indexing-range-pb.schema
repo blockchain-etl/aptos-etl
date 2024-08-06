@@ -1,0 +1,5 @@
+syntax = "proto3";
+message IndexingRange {
+  uint64 range_start = 1;
+  uint64 range_end = 2;
+}

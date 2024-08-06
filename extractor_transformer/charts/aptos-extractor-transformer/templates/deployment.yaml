@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: aptos-extractor-transformer-mainnet
+  name: aptos-extractor-transformer-mainnet
+  namespace: {{ .Values.mainnet.namespace }}
+spec:
+  replicas: {{ .Values.mainnet.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aptos-extractor-transformer-mainnet
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aptos-extractor-transformer-mainnet
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: aptos-extractor-transformer
+          image: gcr.io/aptos-bq/aptos-extractor-transformer-mainnet:{{ .Values.mainnet.image.tag }}
+          command: ["sh"]
+          args:
+          - -c
+          - >-
+            blockchain_etl_indexer index-subscription indexing-ranges-subscription-mainnet
+          env:
+          - name: RUST_LOG
+            value: {{ .Values.rust_log }}
+          resources:
+            requests:
+              memory: {{ .Values.mainnet.resources.memory.requests }}
+            limits:
+              memory: {{ .Values.mainnet.resources.memory.limits }}
+          ports:
+          - containerPort: 4000
+          - containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/.env
+              subPath: .env
+      volumes:
+        - name: config-volume
+          configMap:
+            name: extractor-transformer-config 
+      restartPolicy: Always
+      terminationGracePeriodSeconds: {{ .Values.mainnet.terminationGracePeriodSeconds }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: aptos-extractor-transformer-testnet
+  name: aptos-extractor-transformer-testnet
+  namespace: {{ .Values.testnet.namespace }}
+spec:
+  replicas: {{ .Values.testnet.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aptos-extractor-transformer-testnet
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aptos-extractor-transformer-testnet
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: aptos-extractor-transformer
+          image: gcr.io/aptos-bq/aptos-extractor-transformer-testnet:{{ .Values.testnet.image.tag }}
+          command: ["sh"]
+          args:
+          - -c
+          - >-
+            blockchain_etl_indexer index-subscription indexing-ranges-subscription-testnet
+          env:
+          - name: RUST_LOG
+            value: {{ .Values.rust_log }}
+          resources:
+            requests:
+              memory: {{ .Values.testnet.resources.memory.requests }}
+            limits:
+              memory: {{ .Values.testnet.resources.memory.limits }}
+          ports:
+          - containerPort: 4000
+          - containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/.env
+              subPath: .env
+      volumes:
+        - name: config-volume
+          configMap:
+            name: extractor-transformer-config
+      restartPolicy: Always
+      terminationGracePeriodSeconds: {{ .Values.testnet.terminationGracePeriodSeconds }}

@@ -1,0 +1,41 @@
+syntax = "proto2";
+package aptos.resources;
+
+message Resource {
+enum Visibility {
+    private = 1;
+    public = 2;
+    friend = 3;
+}
+
+message UnixTimestamp {
+    required int64 seconds = 1;
+    required uint32 nanos = 2;
+}
+    // Subsection of ChangeType, but only those relating to resources
+    enum ResourceChangeType {
+        delete_resource = 1;
+        write_resource = 2;
+    }
+
+    message StructTag {
+        required string address = 1;
+        required string module = 2;
+        required string name = 3;
+        repeated string generic_type_params = 4;
+    }
+
+    required int64 block_height = 1;
+    required string block_timestamp = 2;
+    required uint64 tx_version = 3;
+    required string tx_hash = 4;
+    optional uint64 tx_sequence_number = 5;
+    required uint64 change_index = 6;
+    required string address = 7;
+    required string state_key_hash = 8;
+    required string change_type = 9;
+    optional StructTag struct_tag = 10;
+    required string type_str = 11;
+    optional string resource = 12;
+    required UnixTimestamp block_unixtimestamp = 13;
+    }

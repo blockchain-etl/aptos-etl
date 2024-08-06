@@ -1,0 +1,761 @@
+---
+# Source: aptos-fullnode/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: testnet-aptos-fullnode
+  labels:
+    
+    helm.sh/chart: aptos-fullnode-1.0.0
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    {}
+---
+# Source: aptos-fullnode/templates/backup.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: testnet-aptos-fullnode-backup
+  labels:
+    helm.sh/chart: aptos-fullnode-1.0.0
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  azure.yaml: |
+    env_vars: []
+    commands:
+      create_backup: 'echo "$BACKUP_NAME"'
+      create_for_write: |
+        FILE_HANDLE="$BACKUP_HANDLE/$FILE_NAME"
+        echo "$FILE_HANDLE"
+        exec 1>&-  # close stdout
+        gzip -c | azcopy cp --from-to PipeBlob "https://$ACCOUNT.blob.core.windows.net/$CONTAINER/$SUB_DIR/$FILE_HANDLE$SAS" > /dev/null
+      open_for_read: 'azcopy cp --from-to BlobPipe "https://$ACCOUNT.blob.core.windows.net/$CONTAINER/$SUB_DIR/$FILE_HANDLE$SAS" < /dev/null | gzip -cd'
+      save_metadata_line: |
+        FILE_HANDLE="metadata/$FILE_NAME"
+        echo "$FILE_HANDLE"
+        exec 1>&-
+        gzip -c | azcopy cp --from-to PipeBlob "https://$ACCOUNT.blob.core.windows.net/$CONTAINER/$SUB_DIR/$FILE_HANDLE$SAS" > /dev/null
+      list_metadata_files: |
+        (azcopy ls "https://$ACCOUNT.blob.core.windows.net/$CONTAINER/$SUB_DIR/metadata/$SAS" ||:) \
+        | sed -ne "s#; .*##;s#INFO: \(.*\.meta\)#metadata/\1#p"
+      backup_metadata_file: |
+        azcopy sync "https://$ACCOUNT.blob.core.windows.net/$CONTAINER/$SUB_DIR/metadata/$FILE_NAME$SAS" "https://$ACCOUNT.blob.core.windows.net/$CONTAINER/$SUB_DIR/metadata_backup/$FILE_NAME$SAS" --move=true
+  gcs.yaml: "env_vars: []\ncommands:\n  create_backup: 'echo \"$BACKUP_NAME\"'\n  create_for_write:
+    |\n    FILE_HANDLE=\"$BACKUP_HANDLE/$FILE_NAME\"\n    echo \"$FILE_HANDLE\"\n    exec
+    1>&-  # close stdout\n    gzip -c | gcloud storage cp - \"gs://$BUCKET/$SUB_DIR/$FILE_HANDLE\"
+    > /dev/null\n  open_for_read: 'gcloud storage cp \"gs://$BUCKET/$SUB_DIR/$FILE_HANDLE\"
+    - | gzip -cd'\n  save_metadata_line: | \n    FILE_HANDLE=\"metadata/$FILE_NAME\"\n
+    \   echo \"$FILE_HANDLE\"\n    exec 1>&-\n    gzip -c | gcloud storage cp - \"gs://$BUCKET/$SUB_DIR/$FILE_HANDLE\"
+    > /dev/null\n  list_metadata_files: '(gcloud storage ls gs://$BUCKET/$SUB_DIR/metadata/
+    ||:) | sed -ne \"s#gs://.*/metadata/#metadata/#p\"'\n  backup_metadata_file: 'gcloud
+    storage mv gs://$BUCKET/$SUB_DIR/metadata/$FILE_NAME gs://$BUCKET/$SUB_DIR/metadata_backup/$FILE_NAME'\n"
+  oci.yaml: "env_vars: []\ncommands:\n  create_backup: 'echo \"$BACKUP_NAME\"'\n  create_for_write:
+    |\n    FILE_HANDLE=\"$BACKUP_HANDLE/$FILE_NAME\"\n    echo \"$FILE_HANDLE\"\n    exec
+    1>&-  # close stdout\n    gzip -c | curl -s -X PUT --data-binary \"@-\" \"$ENDPOINT$ACCESS_URI/$SUB_DIR/$FILE_HANDLE\"\n
+    \ open_for_read: 'curl -s \"$ENDPOINT$ACCESS_URI/$SUB_DIR/$FILE_HANDLE\" | gzip
+    -cd'\n  save_metadata_line: | \n    FILE_HANDLE=\"metadata/$FILE_NAME\"\n    echo
+    \"$FILE_HANDLE\"\n    exec 1>&-\n    gzip -c | curl -s -X PUT --data-binary \"@-\"
+    \"$ENDPOINT$ACCESS_URI/$SUB_DIR/$FILE_HANDLE\"\n  list_metadata_files: |\n    curl
+    -s \"$ENDPOINT$ACCESS_URI?prefix=/$SUB_DIR/metadata/\" \\\n    | python -c 'import
+    json, sys; print(\"\\n\".join(\"/\".join(o[\"name\"].split(\"/\")[2:]) for o in
+    json.loads(sys.stdin.read()).get(\"objects\", [])), end=\"\")'\n  backup_metadata_file:
+    |\n    curl -sSf \"$ENDPOINT$ACCESS_URI/$SUB_DIR/metadata_backup\" || curl -X PUT
+    \"$ENDPOINT$ACCESS_URI/$SUB_DIR/metadata_backup\" && curl -sSL \"$ENDPOINT$ACCESS_URI/$SUB_DIR/metadata/$FILE_NAME\"
+    | curl -X POST -d @- \"$ENDPOINT$ACCESS_URI/$SUB_DIR/metadata_backup/$FILE_NAME\"
+    && curl -X DELETE \"$ENDPOINT$ACCESS_URI/$SUB_DIR/metadata/$FILE_NAME\"\n"
+  s3-public.yaml: |
+    env_vars: []
+    commands:
+      create_backup: 'echo "$BACKUP_NAME"'
+      create_for_write: |
+        FILE_HANDLE="$BACKUP_HANDLE/$FILE_NAME"
+        echo "$FILE_HANDLE"
+        exec 1>&-
+        gzip -c | aws s3 cp - "s3://$BUCKET/$SUB_DIR/$FILE_HANDLE"
+      open_for_read: 'aws s3 cp "s3://$BUCKET/$SUB_DIR/$FILE_HANDLE" - --no-sign-request | gzip -cd'
+      save_metadata_line: |
+        FILE_HANDLE="metadata/$FILE_NAME"
+        echo "$FILE_HANDLE"
+        exec 1>&-
+        gzip -c | aws s3 cp - "s3://$BUCKET/$SUB_DIR/$FILE_HANDLE" --no-sign-request
+      list_metadata_files: '(aws s3 ls s3://$BUCKET/$SUB_DIR/metadata/ --no-sign-request ||:) | sed -ne "s#.* \(.*\)#metadata/\1#p"'
+      backup_metadata_file: 'aws s3 mv s3://$BUCKET/$SUB_DIR/metadata/$FILE_NAME s3://$BUCKET/$SUB_DIR/metadata_backup/$FILE_NAME --no-progress'
+  s3.yaml: |-
+    env_vars: []
+    commands:
+      create_backup: 'echo "$BACKUP_NAME"'
+      create_for_write: |
+        FILE_HANDLE="$BACKUP_HANDLE/$FILE_NAME"
+        echo "$FILE_HANDLE"
+        exec 1>&-
+        gzip -c | aws s3 cp - "s3://$BUCKET/$SUB_DIR/$FILE_HANDLE"
+      open_for_read: 'aws s3 cp "s3://$BUCKET/$SUB_DIR/$FILE_HANDLE" - | gzip -cd'
+      save_metadata_line: |
+        FILE_HANDLE="metadata/$FILE_NAME"
+        echo "$FILE_HANDLE"
+        exec 1>&-
+        gzip -c | aws s3 cp - "s3://$BUCKET/$SUB_DIR/$FILE_HANDLE"
+      list_metadata_files: '(aws s3 ls s3://$BUCKET/$SUB_DIR/metadata/ ||:) | sed -ne "s#.* \(.*\)#metadata/\1#p"'
+      backup_metadata_file: 'aws s3 mv s3://$BUCKET/$SUB_DIR/metadata/$FILE_NAME s3://$BUCKET/$SUB_DIR/metadata_backup/$FILE_NAME --no-progress'
+  s5cmd-public.yaml: |
+    env_vars: []
+    commands:
+      create_backup: 'echo "$BACKUP_NAME"'
+      create_for_write: |
+        FILE_HANDLE="$BACKUP_HANDLE/$FILE_NAME"
+        echo "$FILE_HANDLE"
+        exec 1>&-
+        gzip -c | s5cmd pipe "s3://$BUCKET/$SUB_DIR/$FILE_HANDLE"
+      open_for_read: 's5cmd --no-sign-request cat "s3://$BUCKET/$SUB_DIR/$FILE_HANDLE" | gzip -cd'
+      save_metadata_line: |
+        FILE_HANDLE="metadata/$FILE_NAME"
+        echo "$FILE_HANDLE"
+        exec 1>&-
+        gzip -c | s5cmd pipe - "s3://$BUCKET/$SUB_DIR/$FILE_HANDLE" --no-sign-request
+      list_metadata_files: '(s5cmd --no-sign-request ls s3://$BUCKET/$SUB_DIR/metadata/ ||:) | sed -ne "s#.* \(.*\)#metadata/\1#p"'
+      backup_metadata_file: 's5cmd --no-sign-request mv s3://$BUCKET/$SUB_DIR/metadata/$FILE_NAME s3://$BUCKET/$SUB_DIR/metadata_backup/$FILE_NAME'
+  scw_s3.yaml: |
+    env_vars: []
+    commands:
+      create_backup: 'echo "$BACKUP_NAME"'
+      create_for_write: |
+        FILE_HANDLE="$BACKUP_HANDLE/$FILE_NAME"
+        echo "$FILE_HANDLE"
+        exec 1>&-
+        gzip -c | aws --endpoint-url="$ENDPOINT_URL" s3 cp - "s3://$BUCKET/$SUB_DIR/$FILE_HANDLE"
+      open_for_read: 'aws --endpoint-url="$ENDPOINT_URL" s3 cp "s3://$BUCKET/$SUB_DIR/$FILE_HANDLE" - | gzip -cd'
+      save_metadata_line: |
+        FILE_HANDLE="metadata/$FILE_NAME"
+        echo "$FILE_HANDLE"
+        exec 1>&-
+        gzip -c | aws --endpoint-url="$ENDPOINT_URL" s3 cp - "s3://$BUCKET/$SUB_DIR/$FILE_HANDLE"
+      list_metadata_files: '(aws --endpoint-url="$ENDPOINT_URL" s3 ls s3://$BUCKET/$SUB_DIR/metadata/ ||:) | sed -ne "s#.* \(.*\)#metadata/\1#p"'
+      backup_metadata_file: 'aws --endpoint-url="$ENDPOINT_URL" s3 mv s3://$BUCKET/$SUB_DIR/metadata/$FILE_NAME s3://$BUCKET/$SUB_DIR/metadata_backup/$FILE_NAME --no-progress'
+---
+# Source: aptos-fullnode/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: testnet-aptos-fullnode
+  labels:
+    helm.sh/chart: aptos-fullnode-1.0.0
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  fullnode.yaml: |-
+    api:
+      address: 0.0.0.0:8080
+    base:
+      role: full_node
+      waypoint:
+        from_file: /opt/aptos/genesis/waypoint.txt
+    execution:
+      genesis_file_location: /opt/aptos/genesis/genesis.blob
+    full_node_networks:
+    - discovery_method: onchain
+      listen_address: /ip4/0.0.0.0/tcp/6182
+      network_id: public
+    state_sync:
+      state_sync_driver:
+        bootstrapping_mode: ApplyTransactionOutputsFromGenesis
+        continuous_syncing_mode: ApplyTransactionOutputs
+    storage:
+      backup_service_address: 0.0.0.0:6186
+      storage_pruner_config:
+        ledger_pruner_config:
+          enable: false
+---
+# Source: aptos-fullnode/templates/storage.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: testnet-aptos-fullnode-e1
+  labels:
+    helm.sh/chart: aptos-fullnode-1.0.0
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: pd-ssd
+  resources:
+    requests:
+      storage: 2000Gi
+---
+# Source: aptos-fullnode/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: testnet-aptos-fullnode-lb
+  labels:
+    helm.sh/chart: aptos-fullnode-1.0.0
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/name: fullnode
+  ports:
+  - name: api
+    port: 80
+    targetPort: 8080
+  - name: aptosnet
+    port: 6182
+  type: LoadBalancer
+  externalTrafficPolicy: 
+  loadBalancerSourceRanges:
+    []
+---
+# Source: aptos-fullnode/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: testnet-aptos-fullnode
+  labels:
+    helm.sh/chart: aptos-fullnode-1.0.0
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/name: fullnode
+  ports:
+  - name: backup
+    port: 6186
+  - name: metrics
+    port: 9101
+---
+# Source: aptos-fullnode/templates/backup.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: testnet-aptos-fullnode-backup
+  labels:
+    helm.sh/chart: aptos-fullnode-1.0.0
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: backup
+spec:
+  serviceName: testnet-aptos-fullnode-backup
+  replicas: 0
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: aptos-fullnode
+      app.kubernetes.io/instance: testnet
+      app.kubernetes.io/name: backup
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: aptos-fullnode
+        app.kubernetes.io/instance: testnet
+        app.kubernetes.io/name: backup
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: runtime/default
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+      - name: backup
+        image: aptoslabs/tools:testnet
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: 1
+            memory: 1Gi
+          requests:
+            cpu: 1
+            memory: 1Gi
+        command: ["/usr/local/bin/aptos-debugger"]
+        args:
+        - "aptos-db"
+        - "backup"
+        - "continuously"
+        - "--metadata-cache-dir"
+        - "/tmp/aptos-backup-metadata"
+        - "--backup-service-address"
+        - "http://testnet-aptos-fullnode:6186"
+        - "--state-snapshot-interval-epochs"
+        - "1"
+        - "--transaction-batch-size"
+        - "1000000"
+        - "--command-adapter-config"
+        - "/opt/aptos/etc/.yaml"
+        env:
+        - name: RUST_LOG
+          value: "info"
+        - name: RUST_BACKTRACE
+          value: "1"
+        # awscli writes to ~/.aws/cli/cache/
+        # gsutil writes to ~/.gsutil/
+        # azcopy writes to ~/.azcopy/
+        - name: HOME
+          value: /tmp
+        - name: SUB_DIR
+          value: e1
+        volumeMounts:
+        - name: backup-config
+          mountPath: /opt/aptos/etc
+        - name: tmp
+          mountPath: /tmp
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 6180
+        runAsGroup: 6180
+        fsGroup: 6180
+      volumes:
+      - name: backup-config
+        configMap:
+          name: testnet-aptos-fullnode-backup
+      - name: tmp
+        emptyDir: {}
+      serviceAccountName: testnet-aptos-fullnode
+---
+# Source: aptos-fullnode/templates/fullnode.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: testnet-aptos-fullnode
+  labels:
+    helm.sh/chart: aptos-fullnode-1.0.0
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: fullnode
+spec:
+  serviceName: testnet-aptos-fullnode
+  replicas: 1
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: aptos-fullnode
+      app.kubernetes.io/instance: testnet
+      app.kubernetes.io/name: fullnode
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: aptos-fullnode
+        app.kubernetes.io/instance: testnet
+        app.kubernetes.io/name: fullnode
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: runtime/default
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9101"
+    spec:
+      terminationGracePeriodSeconds: 0
+      initContainers:
+      - name: aptos-cli
+        image: aptoslabs/tools:nightly_d691a98f434af43b4c6c8bf8c8d578be21da06f7
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - |- 
+          set -e
+          mkdir -p /opt/aptos/data/db
+          cd /opt/aptos/data && 
+          aptos node bootstrap-db \
+          --ledger-history-start-version 0 \
+          --target-version 857829371 \
+          --command-adapter-config gcs.yaml \
+          --target-db-dir /opt/aptos/data/db2
+          curl -X POST -H 'Content-Type: application/json' 'https://chat.googleapis.com/v1/spaces/AAAAV7Egbhw/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=tyU0bQfUuz5eRMxkhvSIb5XpLvf7CeGzUUWkG3nUdyk' -d '{"text": "Aptos Testnet Restore finished @all"}'
+          sleep 48h                            
+        volumeMounts:
+        - name: aptos-data
+          mountPath: /opt/aptos/data
+      containers:
+      - name: fullnode
+        image: aptoslabs/validator:testnet
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - |-
+          set -e
+          # Download genesis and waypoint if necessary
+          curl -o /opt/aptos/genesis/waypoint.txt https://raw.githubusercontent.com/aptos-labs/aptos-networks/main/testnet/waypoint.txt
+          curl -o /opt/aptos/genesis/genesis.blob https://raw.githubusercontent.com/aptos-labs/aptos-networks/main/testnet/genesis.blob
+          # Start the node
+          /usr/local/bin/aptos-node -f /opt/aptos/etc/fullnode.yaml
+        resources:
+          limits:
+            cpu: 14
+            memory: 26Gi
+          requests:
+            cpu: 14
+            memory: 26Gi
+        env:
+        - name: RUST_LOG
+          value: info
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: RUST_BACKTRACE
+          value: "0"
+        volumeMounts:
+        - name: aptos-config
+          mountPath: /opt/aptos/etc
+        - name: aptos-genesis
+          mountPath: /opt/aptos/genesis
+        - name: aptos-data
+          mountPath: /opt/aptos/data
+        - name: tmp
+          mountPath: /tmp
+        ports:
+        - containerPort: 6182
+        - containerPort: 6186
+        - containerPort: 8081
+        - containerPort: 8080
+          name: api
+        - containerPort: 9101
+          name: metrics
+        # NOTE: these require the API to be enabled, which is not always the case
+      #   livenessProbe: # restart the pod if the REST API is ever unresponsive
+      #     httpGet:
+      #       path: /v1/-/healthy
+      #       port: 8080
+      #     initialDelaySeconds: 30
+      #   readinessProbe: # pod is ready when state sync is caught up
+      #     httpGet:
+      #       path: /v1/-/healthy?duration_secs=10
+      #       port: 8080
+      #   securityContext:
+      #     readOnlyRootFilesystem: true
+      #     allowPrivilegeEscalation: false
+      #     capabilities:
+      #       drop:
+      #       - ALL
+      # securityContext:
+      #   runAsNonRoot: true
+      #   runAsUser: 6180
+      #   runAsGroup: 6180
+      #   fsGroup: 6180
+      volumes:
+      - name: aptos-config
+        configMap:
+          name: testnet-aptos-fullnode
+      - name: aptos-genesis
+        emptyDir: {}
+      - name: aptos-data
+        persistentVolumeClaim:
+          claimName: testnet-aptos-fullnode-e1
+      - name: tmp
+        emptyDir: {}
+      serviceAccountName: testnet-aptos-fullnode
+---
+# Source: aptos-fullnode/templates/restore.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: testnet-aptos-fullnode-restore-mvpc
+  labels:
+    helm.sh/chart: aptos-fullnode-1.0.0
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: restore
+spec:
+  completions: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: aptos-fullnode
+        app.kubernetes.io/instance: testnet
+        app.kubernetes.io/name: restore
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: runtime/default
+    spec:
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 0
+      containers:
+      - name: restore
+        image: aptoslabs/tools:testnet
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: 6
+            memory: 15Gi
+          requests:
+            cpu: 6
+            memory: 15Gi
+        command:
+        - sh
+        - -c
+        - |-
+          set -ex
+          # cleanup aptosdb
+          if [ ! -f /opt/aptos/data/restore-uid ] || [ "$(cat /opt/aptos/data/restore-uid)" != "$CONTROLLER_UID" ]; then
+              rm -rf /opt/aptos/data/db
+              echo "$CONTROLLER_UID" > /opt/aptos/data/restore-uid
+          fi
+          # start restore process
+          /usr/local/bin/aptos-debugger aptos-db restore bootstrap-db --concurrent-downloads 2 --target-db-dir /opt/aptos/data/db --metadata-cache-dir /tmp/aptos-restore-metadata --command-adapter-config /opt/aptos/etc/.yaml
+        env:
+        - name: RUST_LOG
+          value: "debug"
+        - name: RUST_BACKTRACE
+          value: "1"
+        - name: CONTROLLER_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.labels['controller-uid']"
+        # awscli writes to ~/.aws/cli/cache/
+        # gsutil writes to ~/.gsutil/
+        # azcopy writes to ~/.azcopy/
+        - name: HOME
+          value: /tmp
+        - name: SUB_DIR
+          value: e1
+        volumeMounts:
+        - name: backup-config
+          mountPath: /opt/aptos/etc
+        - name: aptos-data
+          mountPath: /opt/aptos/data
+        - name: tmp
+          mountPath: /tmp
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 6180
+        runAsGroup: 6180
+        fsGroup: 6180
+      volumes:
+      - name: backup-config
+        configMap:
+          name: testnet-aptos-fullnode-backup
+      - name: tmp
+        emptyDir: {}
+      - name: aptos-data
+        persistentVolumeClaim:
+          claimName: testnet-aptos-fullnode-e1
+      serviceAccountName: testnet-aptos-fullnode
+---
+# Source: aptos-fullnode/templates/backup-compaction.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: testnet-aptos-fullnode-backup-compaction
+  labels:
+    helm.sh/chart: aptos-fullnode-1.0.0
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: backup-compaction
+spec:
+  concurrencyPolicy: Replace
+  suspend: true
+  schedule: "@daily"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/part-of: aptos-fullnode
+            app.kubernetes.io/instance: testnet
+            app.kubernetes.io/name: backup-compaction
+          annotations:
+            seccomp.security.alpha.kubernetes.io/pod: runtime/default
+        spec:
+          restartPolicy: Never
+          terminationGracePeriodSeconds: 0
+          containers:
+          - name: backup-compaction
+            image: aptoslabs/tools:testnet
+            imagePullPolicy: IfNotPresent
+            command:
+            - /usr/local/bin/aptos-debugger
+            - aptos-db
+            - backup-maintenance
+            - compact
+            - --state-snapshot-file-compact-factor
+            - "100"
+            - --transaction-file-compact-factor
+            - "100"
+            - --epoch-ending-file-compact-factor
+            - "100"
+            - --metadata-cache-dir
+            - /tmp/aptos-backup-compaction-metadata
+            - --command-adapter-config
+            # use the same config with the backup sts
+            - /opt/aptos/etc/.yaml
+            env:
+            - name: RUST_LOG
+              value: "info"
+            - name: RUST_BACKTRACE
+              value: "1"
+            # awscli writes to ~/.aws/cli/cache/
+            # gsutil writes to ~/.gsutil/
+            # azcopy writes to ~/.azcopy/
+            - name: HOME
+              value: /tmp
+            - name: SUB_DIR
+              value: e1
+            resources:
+              limits:
+                cpu: 1
+                memory: 1Gi
+              requests:
+                cpu: 1
+                memory: 1Gi
+            volumeMounts:
+            - name: backup-config
+              mountPath: /opt/aptos/etc
+            - name: tmp
+              mountPath: /tmp
+            securityContext:
+              readOnlyRootFilesystem: true
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 6180
+            runAsGroup: 6180
+            fsGroup: 6180
+          volumes:
+          - name: backup-config
+            configMap:
+              name: testnet-aptos-fullnode-backup
+          - name: tmp
+            emptyDir: {}
+          serviceAccountName: testnet-aptos-fullnode
+---
+# Source: aptos-fullnode/templates/backup-verify.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: testnet-aptos-fullnode-backup-verify
+  labels:
+    helm.sh/chart: aptos-fullnode-1.0.0
+    app.kubernetes.io/part-of: aptos-fullnode
+    app.kubernetes.io/instance: testnet
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: backup-verify
+spec:
+  concurrencyPolicy: Replace
+  suspend: true
+  schedule: "@daily"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/part-of: aptos-fullnode
+            app.kubernetes.io/instance: testnet
+            app.kubernetes.io/name: backup-verify
+          annotations:
+            seccomp.security.alpha.kubernetes.io/pod: runtime/default
+        spec:
+          restartPolicy: Never
+          terminationGracePeriodSeconds: 0
+          containers:
+          - name: backup-verify
+            image: aptoslabs/tools:testnet
+            imagePullPolicy: IfNotPresent
+            command:
+            - /usr/local/bin/aptos-debugger
+            - aptos-db
+            - backup
+            - verify
+            - --metadata-cache-dir
+            - /tmp/aptos-backup-verify-metadata
+            - --command-adapter-config
+            # use the same config with the backup sts
+            - /opt/aptos/etc/.yaml
+            env:
+            - name: RUST_LOG
+              value: "info"
+            - name: RUST_BACKTRACE
+              value: "1"
+            # awscli writes to ~/.aws/cli/cache/
+            # gsutil writes to ~/.gsutil/
+            # azcopy writes to ~/.azcopy/
+            - name: HOME
+              value: /tmp
+            - name: SUB_DIR
+              value: e1
+            resources:
+              limits:
+                cpu: 4
+                memory: 8Gi
+              requests:
+                cpu: 4
+                memory: 8Gi
+            volumeMounts:
+            - name: backup-config
+              mountPath: /opt/aptos/etc
+            - name: tmp
+              mountPath: /tmp
+            securityContext:
+              readOnlyRootFilesystem: true
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 6180
+            runAsGroup: 6180
+            fsGroup: 6180
+          volumes:
+          - name: backup-config
+            configMap:
+              name: testnet-aptos-fullnode-backup
+          - name: tmp
+            emptyDir: {}
+          serviceAccountName: testnet-aptos-fullnode
+---
+# Source: aptos-fullnode/templates/tests/test-fullnode-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: testnet-aptos-fullnode-sync-test
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: testnet-aptos-fullnode-sync-test
+      image: byrnedo/alpine-curl:0.1.8@sha256:548379d0a4a0c08b9e55d9d87a592b7d35d9ab3037f4936f5ccd09d0b625a342
+      imagePullPolicy: IfNotPresent
+      command:
+        - sh
+        - -c
+        - |-
+          set -ex
+          curl --fail -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0", "method":"get_metadata","params":[],"id":1}' http://testnet-aptos-fullnode-lb:80
+  restartPolicy: Never

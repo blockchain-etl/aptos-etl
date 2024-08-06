@@ -1,0 +1,134 @@
+[
+    {
+        "name": "block_height",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The height of the block."
+    },
+    {
+        "name": "block_timestamp",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED",
+        "description": "Timestamp of when the block was finalized."
+    },
+    {
+        "name": "block_unixtimestamp",
+        "type": "RECORD",
+        "mode": "REQUIRED",
+        "description": "The unix timestamp of when the block was finalized.",
+        "fields": [
+            {
+                "name": "seconds",
+                "type": "INT64",
+                "mode": "REQUIRED",
+                "description": "The number of seconds since the unix epoch."
+            },
+            {
+                "name": "nanos",
+                "type": "INT64",
+                "mode": "REQUIRED",
+                "description": "The number of nanoseconds that have elapsed since the beginning of the second specified in the seconds field."
+            }
+        ]
+    },
+    {
+        "name": "tx_version",
+        "type": "INT64",
+        "mode": "NULLABLE",
+        "description": "An unique identifier for a transaction."
+    },
+    {
+        "name": "tx_hash",
+        "type": "STRING",
+        "mode": "REQUIRED",
+        "description": "A hash representing this transaction."
+    },
+    {
+    	"name": "threshold",
+    	"type": "INT64",
+    	"mode": "NULLABLE",
+    	"description": "The number of required signatures, applicable with Multi-Ed25519 signatures"
+    },
+    {
+    	"name": "build_type",
+    	"type": "STRING",
+    	"mode": "REQUIRED",
+    	"description": "Describes how the signature was built: `ed25519`, `multi_ed25519`, `multi_agent`, `fee_payer`, `single_sender`"
+    },
+    {
+    	"name": "public_key",
+    	"type": "RECORD",
+    	"mode": "REQUIRED",
+    	"description": "The public key attached to the signature.",
+    	"fields": [
+    		{
+    			"name": "type",
+    			"mode": "REQUIRED",
+    			"description": "The public key type: `unspecified`, `ed25519`, `secp256k1_ecdsa`, `secp256r1_ecdsa`.",
+    			"type": "STRING"
+    		},
+    		{
+    			"name": "value",
+    			"type": "STRING",
+    			"mode": "REQUIRED",
+    			"description": "The hex value represents the public key."
+    		},
+    		{
+    			"name": "index",
+    			"type": "INT64",
+				"mode": "NULLABLE",
+				"description": "Applicable when part of a Multi-Ed25519"
+    		}
+    	]
+    },
+    {
+    	"name": "signature",
+    	"type": "RECORD",
+    	"mode": "NULLABLE",
+    	"description": "The signature value attached to this signature.  If Null, the public key was a part of the transaction but did not sign.",
+    	"fields": [
+    		{
+    			"name": "type",
+    			"mode": "REQUIRED",	
+    			"description": "The public key type: `unspecified`, `ed25519`, `secp256k1_ecdsa`, `webauthn`, `ZkId`.",
+    			"type": "STRING"
+    		},
+    		{
+    			"name": "value",
+    			"type": "STRING",
+    			"mode": "REQUIRED",
+    			"description": "The hex value representing the signature bytes."
+    		},
+    		{
+    			"name": "index",
+    			"type": "INT64",
+				"mode": "NULLABLE",
+    			"description": "Applicable when signature was part of a multi key signature"
+    		}
+    	]
+    },
+    {
+    	"name": "is_secondary",
+    	"type": "BOOL",
+    	"mode": "NULLABLE",
+    	"description": "Whether this signature was a secondary signature.  Null if not applicable."
+    },
+    {
+    	"name": "is_fee_payer",
+    	"type": "BOOL",
+    	"mode": "NULLABLE",
+    	"description": "Whether this signature was a fee payer signature. Null if not applicable."
+    },
+    {
+    	"name": "is_sender",
+    	"type": "BOOL",
+    	"mode": "NULLABLE",
+    	"description": "Whether this signature was the sender signature. Null if not applicable."
+    },
+	{
+		"name": "signer",
+		"mode": "REQUIRED",
+		"type": "STRING",
+		"description": "Address of the signer's account"
+	}
+]

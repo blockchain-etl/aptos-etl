@@ -1,0 +1,353 @@
+[
+  {
+    "name": "block_height",
+    "type": "INT64",
+    "mode": "REQUIRED",
+    "description": "The height of the block containing this transaction."
+  },
+  {
+    "name": "block_timestamp",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED",
+    "description": "Timestamp of when the block containing this transaction was finalized."
+  },
+  {
+    "name": "block_unixtimestamp",
+    "type": "RECORD",
+    "mode": "REQUIRED",
+    "description": "The unix timestamp of when the block was finalized.",
+    "fields": [
+      {
+        "name": "seconds",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The number of seconds since the unix epoch."
+      },
+      {
+        "name": "nanos",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The number of nanoseconds that have elapsed since the beginning of the second specified in the seconds field."
+      }
+    ]
+  },
+  {
+    "name": "tx_type",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "The type of the transaction, limited to `user`, `genesis`, `block_metadata`, and `state_checkpoint`.  No `pending` transactions are added."
+  },
+  {
+    "name": "tx_version",
+    "type": "INT64",
+    "mode": "REQUIRED",
+    "description": "An unique identifier for a transaction."
+  },
+  {
+    "name": "tx_hash",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "A hash representing this transaction."
+  },
+  {
+    "name": "state_change_hash",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "A hash representing the changes of the blockchain state after the transaction"
+  },
+  {
+    "name": "event_root_hash",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "The event root hash of the transaction."
+  },
+  {
+    "name": "state_checkpoint_hash",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "A hash representing the state of the blockchain at the moment of this transaction."
+  },
+  {
+    "name": "gas_used",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "The amount of computational resources consumed to process this transaction, measured in Octa (APT = Octa / 1E8)."
+  },
+  {
+    "name": "success",
+    "type": "BOOL",
+    "mode": "REQUIRED",
+    "description": "Whether the transaction was successful."
+  },
+  {
+    "name": "vm_status",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "The VM status of the transaction; can be useful during failure."
+  },
+  {
+    "name": "accumulator_root_hash",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "The root hash of the Merkle accumulator."
+  },
+  {
+    "name": "sequence_number",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "Only applicable with `user` transactions, represents the `n` transaction committed by the account, and is incremented each time an account commits a transaction.  Can be used as an unique identifier for a transaction among a singular user."
+  },
+  {
+    "name": "max_gas_amount",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "The maximum amount of gas that a sender is willing to pay for a transaction. Gas charges are equal to the base gas cost covered by computation and IO multiplied by the gas price. Gas costs also include storage with an Apt-fixed priced storage model. This is represented as Octas or units of 10E-8 Aptos utility tokens."
+  },
+  {
+    "name": "gas_unit_price",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "The price per unit of gas that a sender is willing to pay to execute a transaction represented as Octa or units of 10E-8 utility tokens."
+  },
+  {
+    "name": "sender",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Sender is the address of the originator account for a transaction, represented as a 64 character hex string, left-padded with zeros."
+  },
+  {
+    "name": "num_events",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "The number of events that occurred.  If null, no events can occur in that type of transaction, if 0 then no events occurred."
+  },
+  {
+    "name": "num_changes",
+    "type": "RECORD",
+    "mode": "REQUIRED",
+    "description": "The number of changes that occured, organized per change type.  The `total` field represents the total of all the different changes.",
+    "fields": [
+      {
+        "name": "total",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The total amount of changes to occur in this transaction."
+      },
+      {
+        "name": "delete_module",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The total number of changes deleting modules occured."
+      },
+      {
+        "name": "delete_resource",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The total number of changes deleting resources occured."
+      },
+      {
+        "name": "delete_table_item",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The total number of changes deleting table items occured."
+      },
+      {
+        "name": "write_module",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The total number of changes writing modules occured."
+      },
+      {
+        "name": "write_resource",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The total number of changes writing resources occured."
+      },
+      {
+        "name": "write_table_item",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The total number of changes writing table items occured."
+      }
+    ]
+  },
+  {
+    "name": "expiration_timestamp",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE",
+    "description": "Time that user transaction would expire, only applicable for `user` transactions.  Some timestamps far from the Unix epoch may be null for user transactions, whereas the column `expiration_unixtimestamp` should always be filled."
+  },
+  {
+    "name": "expiration_unixtimestamp",
+    "type": "RECORD",
+    "mode": "NULLABLE",
+    "description": "The Unix timestamp that the user transaction would expire.  Only applicable for `user` transactions.",
+    "fields": [
+      {
+        "name": "seconds",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The number of seconds since the unix epoch."
+      },
+      {
+        "name": "nanos",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The number of nanoseconds that have elapsed since the beginning of the second specified in the seconds field."
+      }
+    ]
+  },
+  {
+    "name": "payload_type",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "One of the following payload types: `entry_function`, `script`, `module_bundle`, `multisig`."
+  },
+  {
+    "name": "payload",
+    "type": "RECORD",
+    "mode": "NULLABLE",
+    "description": "The core content or instructions of the transactions, the payload indicates an action or set of actions to occur on the blockchain.",
+    "fields": [
+      {
+        "name": "function",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "Applicable when type is `entry_function`. Entry function id is string representation of a entry function defined on-chain. The format {address}::{module name}::{function name}.  Both module name and function name are case-sensitive.  Addresses are represented as a 64 character hex string."
+      },
+      {
+        "name": "entry_function_id_str",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "type_arguments",
+        "type": "STRING",
+        "mode": "REPEATED",
+        "description": "Applicable when type is `entry_function` or `script`. Type arguments of the function."
+      },
+      {
+        "name": "arguments",
+        "type": "STRING",
+        "mode": "REPEATED",
+        "description": "Applicable when type is `entry_function` or `script`. Arguments of the function."
+      },
+      {
+        "name": "execute_as",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "A hex encoded 32 byte Aptos account address, address represented as a 64 character string, left-padded with zeroes."
+      },
+      {
+        "name": "code",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "description": "Applicable when type is `script_payload`, contains the bytecode and its ABI.",
+        "fields": [
+          {
+            "name": "bytecode",
+            "type": "BYTES",
+            "mode": "NULLABLE",
+            "description": "The bytecode of the code."
+          },
+          {
+            "name": "abi",
+            "type": "RECORD",
+            "mode": "NULLABLE",
+            "description": "The application binary interface associated with the code.",
+            "fields": [
+              {
+                "name": "name",
+                "type": "STRING",
+                "mode": "REQUIRED",
+                "description": "Name associated with the code."
+              },
+              {
+                "name": "visibility",
+                "type": "STRING",
+                "mode": "REQUIRED",
+                "description": "The visibility; should be `unspecified`, `private`, `public`, or `friend`."
+              },
+              {
+                "name": "is_entry",
+                "type": "BOOL",
+                "mode": "REQUIRED",
+                "description": "Whether the code can be invoked by other users or contracts."
+              },
+              {
+                "name": "is_view",
+                "type": "BOOL",
+                "mode": "NULLABLE",
+                "description": "Indicates the code is read only."
+              },
+              {
+                "name": "generic_type_params",
+                "type": "RECORD",
+                "mode": "REPEATED",
+                "description": "The generic types associated with the different parameters.",
+                "fields": [
+                  {
+                    "name": "constraints",
+                    "type": "STRING",
+                    "mode": "REPEATED",
+                    "description": "The generic types."
+                  }
+                ]
+              },
+              {
+                "name": "params",
+                "type": "STRING",
+                "mode": "REPEATED",
+                "description": "The parameters applied."
+              },
+              {
+                "name": "return",
+                "type": "STRING",
+                "mode": "REPEATED",
+                "description": "The return values."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "multisig_address",
+        "type": "STRING",
+        "mode": "NULLABLE",
+        "description": "The multisig address, applicable when payload type is `multisig`."
+      },
+      {
+        "name": "tx_payload",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "description": "Sometimes applicable when the payload type is `multisig`, containing additional payload.",
+        "fields": [
+          {
+            "name": "function",
+            "type": "STRING",
+            "mode": "REQUIRED",
+            "description": "Location of the function being called."
+          },
+          {
+            "name": "type_arguments",
+            "type": "STRING",
+            "mode": "REPEATED",
+            "description": "The types of the arguments."
+          },
+          {
+            "name": "arguments",
+            "type": "STRING",
+            "mode": "REPEATED",
+            "description": "The argument values."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "num_signatures",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "The number of signature records produced."
+  }
+]

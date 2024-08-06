@@ -1,0 +1,71 @@
+# apiVersion: batch/v1
+# kind: Job
+# metadata:
+#   name: aptos-restore-job-testnet
+#   namespace: testnet
+# spec:
+#   template:
+#     spec:
+#       containers:
+#       - name: preload
+#         image: aptoslabs/tools:testnet
+#         command: ["/bin/sh", "-c"]
+#         args:
+#           - >
+#             mkdir -p /opt/aptos/data/db-restored &&
+#             wget -P /opt/aptos/data https://raw.githubusercontent.com/aptos-labs/aptos-networks/main/testnet/backups/gcs.yaml &&
+#             cd /opt/aptos/data &&
+#             aptos node bootstrap-db --ledger-history-start-version 0 --command-adapter-config gcs.yaml --target-db-dir /opt/aptos/data/db-restored
+#         volumeMounts:
+#         - name: aptos-config
+#           mountPath: /path/to/config  # Replace with the actual mount path
+#         - name: aptos-genesis
+#           mountPath: /opt/aptos/data
+#         - name: aptos-data
+#           mountPath: /opt/aptos/data/db-restored
+#       restartPolicy: Never
+#       volumes:
+#       - name: aptos-config
+#         configMap:
+#           name: testnet-aptos-fullnode
+#       - name: aptos-genesis
+#         emptyDir: {}
+#       - name: aptos-data
+#         persistentVolumeClaim:
+#           claimName: testnet-aptos-fullnode-e1
+# ---
+# apiVersion: batch/v1
+# kind: Job
+# metadata:
+#   name: aptos-restore-job-mainnet
+#   namespace: mainnet
+# spec:
+#   template:
+#     spec:
+#       containers:
+#       - name: preload
+#         image: aptoslabs/tools:mainnet
+#         command: ["/bin/sh", "-c"]
+#         args:
+#           - >
+#             mkdir -p /opt/aptos/data/db-restored &&
+#             wget -P /opt/aptos/data https://raw.githubusercontent.com/aptos-labs/aptos-networks/main/mainnet/backups/gcs.yaml &&
+#             cd /opt/aptos/data &&
+#             aptos node bootstrap-db --ledger-history-start-version 0 --command-adapter-config gcs.yaml --target-db-dir /opt/aptos/data/db-restored
+#         volumeMounts:
+#         - name: aptos-config
+#           mountPath: /path/to/config  # Replace with the actual mount path
+#         - name: aptos-genesis
+#           mountPath: /opt/aptos/data
+#         - name: aptos-data
+#           mountPath: /opt/aptos/data/db-restored
+#       restartPolicy: Never
+#       volumes:
+#       - name: aptos-config
+#         configMap:
+#           name: mainnet-aptos-fullnode
+#       - name: aptos-genesis
+#         emptyDir: {}
+#       - name: aptos-data
+#         persistentVolumeClaim:
+#           claimName: mainnet-aptos-fullnode-e1

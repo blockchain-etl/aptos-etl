@@ -1,0 +1,6 @@
+syntax = "proto3";
+package aptos.pubsub_range;
+message IndexingRange {
+  uint64 start = 1;
+  uint64 end = 2;
+}

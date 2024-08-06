@@ -1,0 +1,9 @@
+FROM rust:1.76
+COPY . .
+RUN cargo install --path .
+CMD ["blockchain_etl_indexer index-subscription indexing-ranges-subscription-mainnet"]
+
+# Expose the metrics port for Prometheus
+EXPOSE 4000
+# Expose the port for kubernetes probes
+EXPOSE 8080

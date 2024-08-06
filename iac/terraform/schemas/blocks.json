@@ -1,0 +1,64 @@
+[
+  {
+    "name": "block_hash",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "The block's hash."
+  },
+  {
+    "name": "block_timestamp",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED",
+    "description": "The timestamp of when the block was finalized."
+  },
+  {
+    "name": "block_unixtimestamp",
+    "type": "RECORD",
+    "mode": "REQUIRED",
+    "description": "The unix timestamp of when the block was finalized.",
+    "fields": [
+      {
+        "name": "seconds",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The number of seconds since the unix epoch."
+      },
+      {
+        "name": "nanos",
+        "type": "INT64",
+        "mode": "REQUIRED",
+        "description": "The number of nanoseconds that have elapsed since the beginning of the second specified in the seconds field."
+      }
+    ]
+  },
+  {
+    "name": "block_height",
+    "type": "INT64",
+    "mode": "REQUIRED",
+    "description": "The block height."
+  },
+  {
+    "name": "blockmetadata_tx_version",
+    "type": "INT64",
+    "mode": "REQUIRED",
+    "description": "The transaction version belongs to the block metadata transaction."
+  },
+  {
+    "name": "round",
+    "type": "INT64",
+    "mode": "REQUIRED",
+    "description": "The shared counter used to select leaders during an epoch of the consensus protocol."
+  },
+  {
+    "name": "previous_block_votes_bitvec",
+    "type": "BYTES",
+    "mode": "REQUIRED",
+    "description": "The previous vote blocks."
+  },
+  {
+    "name": "proposer",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "The address of the account that proposed the block.  Represented as a hex encoded 32 byte Aptos account address represented as a 64 character string, left-padded with zeros."
+  }
+]

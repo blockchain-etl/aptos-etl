@@ -1,0 +1,4 @@
+requests
+google-cloud-pubsub
+protobuf
+

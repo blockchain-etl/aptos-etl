@@ -1,0 +1,95 @@
+environment:
+serviceAccountName: aptos-app-sa
+rust_log: info
+
+mainnet:
+  replicaCount: 1
+  namespace: mainnet
+  configMap:
+    data: |
+      QUEUE_NAME_BLOCKS="block-records-mainnet"
+      QUEUE_NAME_RESOURCES="resource-records-mainnet"
+      QUEUE_NAME_CHANGES="change-records-mainnet"
+      QUEUE_NAME_TRANSACTIONS="transaction-records-mainnet"
+      QUEUE_NAME_EVENTS="event-records-mainnet"
+      QUEUE_NAME_MODULES="module-records-mainnet"
+      QUEUE_NAME_SIGNATURES="signature-records-mainnet"
+      QUEUE_NAME_TABLE_ITEMS="table-item-records-mainnet"
+      ENABLE_METRICS=true
+      METRICS_PORT=4000
+      HEALTH_CHECKS_PORT=8080
+      OUTPUT_DIR="./output/"
+      APTOS_GRPC_ADDR = "https://grpc.mainnet.aptoslabs.com:443"
+      APTOS_GRPC_AUTH = "aptoslabs_GC1m915ySoq_Ei4dKom14KzNQYdnPNuhxdqkoZbWMzkZe"
+      APTOS_GRPC_ADDR_FALLBACK = "https://grpc.mainnet.aptoslabs.com:443"
+      APTOS_GRPC_AUTH_FALLBACK = "aptoslabs_GC1m915ySoq_Ei4dKom14KzNQYdnPNuhxdqkoZbWMzkZe"
+  resources:
+    memory:
+      requests: 500Mi
+      limits: 1Gi
+  env:
+    queue_name_blocks: block-records-mainnet
+    queue_name_resources: resource-records-mainnet
+    queue_name_changes: change-records-mainnet
+    queue_name_transactions: transaction-records-mainnet
+    queue_name_events: event-records-mainnet
+    queue_name_modules: module-records-mainnet
+    queue_name_signatures: signature-records-mainnet
+    queue_name_table_items: table-item-records-mainnet
+    enable_metrics: true
+    metrics_port: 4000
+    health_checks_port: 8080
+    output_dir: ./output/
+    aptos_grpc_addr: http://mainnet-aptos-fullnode:50051
+    aptos_grpc_auth: aptoslabs_GC1m915ySoq_Ei4dKom14KzNQYdnPNuhxdqkoZbWMzkZe
+    aptos_grpc_addr_fallback: https://grpc.mainnet.aptoslabs.com:443
+    aptos_grpc_auth_fallback: aptoslabs_GC1m915ySoq_Ei4dKom14KzNQYdnPNuhxdqkoZbWMzkZe
+  image:
+    tag: aa84f6f
+  terminationGracePeriodSeconds: 300
+
+testnet:
+  replicaCount: 1
+  namespace: testnet
+  configMap:
+    data: |
+      QUEUE_NAME_BLOCKS="aptos_testnet_blocks"
+      QUEUE_NAME_RESOURCES="aptos_testnet_resources"
+      QUEUE_NAME_CHANGES="aptos_testnet_changes"
+      QUEUE_NAME_TRANSACTIONS="aptos_testnet_transactions"
+      QUEUE_NAME_EVENTS="aptos_testnet_events"
+      QUEUE_NAME_MODULES="aptos_testnet_modules"
+      QUEUE_NAME_SIGNATURES="aptos_testnet_signatures"
+      QUEUE_NAME_TABLE_ITEMS="aptos_testnet_table_items"
+      ENABLE_METRICS=true
+      METRICS_PORT=4000
+      HEALTH_CHECKS_PORT=8080
+      OUTPUT_DIR="./output/"
+      APTOS_GRPC_ADDR="http://testnet-aptos-fullnode:50051"
+      APTOS_GRPC_AUTH="aptoslabs_5rQm5LRvozq_7tSD2AEYBjuxLYXe3BFXgWf2UPkZMHm1r"
+      APTOS_GRPC_ADDR_FALLBACK = "https://grpc.testnet.aptoslabs.com:443"
+      APTOS_GRPC_AUTH_FALLBACK = "aptoslabs_5rQm5LRvozq_7tSD2AEYBjuxLYXe3BFXgWf2UPkZMHm1r"
+  resources:
+    memory:
+      requests: 200Mi
+      limits: 650Mi
+  env:
+    queue_name_blocks: aptos_testnet_blocks
+    queue_name_resources: aptos_testnet_resources
+    queue_name_changes: aptos_testnet_changes
+    queue_name_transactions: aptos_testnet_transactions
+    queue_name_events: aptos_testnet_events
+    queue_name_modules: aptos_testnet_modules
+    queue_name_signatures: aptos_testnet_signatures
+    queue_name_table_items: aptos_testnet_table_items
+    enable_metrics: true
+    metrics_port: 4000
+    health_checks_port: 8080
+    output_dir: ./output/
+    aptos_grpc_addr: "http://testnet-aptos-fullnode:50051"
+    aptos_grpc_auth: aptoslabs_5rQm5LRvozq_7tSD2AEYBjuxLYXe3BFXgWf2UPkZMHm1r
+    aptos_grpc_addr_fallback: https://grpc.testnet.aptoslabs.com:443
+    aptos_grpc_auth_fallback: "aptoslabs_5rQm5LRvozq_7tSD2AEYBjuxLYXe3BFXgWf2UPkZMHm1r"
+  image:
+    tag: aa84f6f
+  terminationGracePeriodSeconds: 300
