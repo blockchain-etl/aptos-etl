@@ -17,8 +17,11 @@ An Aptos `mainnet` full node and `testnet` full node are both deployed in a Kube
 3. The coordination performed by `indexing_coordinator` works by publishing ranges of transaction numbers (called "versions" on Aptos) to a Google Pub/Sub topic. The `extractor_transformer` instances each pull their tasks from the Pub/Sub topic, and make transaction requests to the node's gRPC interface in parallel. To ensure that the `extractor_transformer` instances do not receive the same messages from the Pub/Sub topic, all of them will use the same `subscription` to the topic. This is known as "competing consumers" or "competing subscribers". In testing, Pub/Sub seems to evenly distribute messages to each subscriber.
 
 ### Loading
+Bath and stream loading are both supported.
 
-Google Cloud Composer (Apache Airflow) is used to insert the records from the GCS buckets into BigQuery temporary tables. Then, Cloud Composer performs a SQL `MERGE` into the final BigQuery dataset to prevent duplicate records.
+If using the IAC scripts in this repo, the `mainnet` pipeline will use streaming inserts, and the `testnet` pipeline will use batch loading.
+- Streaming works by publishing record as Protocol Buffers messages to Pub/Sub topics (one topic per table), which Dataflow then subscribes to and inserts into BigQuery.
+- Batch loading works by uploading records as JSON files to Google Cloud Storage. Cloud Composer then copies these records from GCS to BigQuery hourly.
 
 ## Directories in this Repo
 
