@@ -23,6 +23,9 @@ If using the IAC scripts in this repo, the `mainnet` pipeline will use streaming
 - Streaming works by publishing record as Protocol Buffers messages to Pub/Sub topics (one topic per table), which Dataflow then subscribes to and inserts into BigQuery.
 - Batch loading works by uploading records as JSON files to Google Cloud Storage. Cloud Composer then copies these records from GCS to BigQuery hourly.
 
+![mainnet architecture](/assets/mainnet_streaming_architecture.png)
+![testnet architecture](/assets/testnet_batch_architecture.png)
+
 ## Directories in this Repo
 
 * `extractor_transformer`: Rust codebase for data extraction from the node, transformation into table records, and dumping into GCS buckets
