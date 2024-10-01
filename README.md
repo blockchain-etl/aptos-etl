@@ -2,7 +2,13 @@
 
 This repo contains everything necessary to run an Aptos ETL pipeline (it is a monorepo).
 
+## Quickstart
+To deploy your own instance of this pipeline, you can find full end-to-end deployment scripts and documentation [here](/iac/).
+
 ## Architecture
+
+![mainnet architecture](/assets/mainnet_streaming_architecture.png)
+![testnet architecture](/assets/testnet_batch_architecture.png)
 
 The overall architecture is as follows:
 
@@ -22,9 +28,6 @@ Bath and stream loading are both supported.
 If using the IAC scripts in this repo, the `mainnet` pipeline will use streaming inserts, and the `testnet` pipeline will use batch loading.
 - Streaming works by publishing record as Protocol Buffers messages to Pub/Sub topics (one topic per table), which Dataflow then subscribes to and inserts into BigQuery.
 - Batch loading works by uploading records as JSON files to Google Cloud Storage. Cloud Composer then copies these records from GCS to BigQuery hourly.
-
-![mainnet architecture](/assets/mainnet_streaming_architecture.png)
-![testnet architecture](/assets/testnet_batch_architecture.png)
 
 ## Directories in this Repo
 

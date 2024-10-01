@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: aptos-restore-job-testnet-tornike
+  namespace: testnet
+spec:
+  template:
+    spec:
+      serviceAccountName: aptos-app-sa
+      containers:
+      - name: preload
+        image: aptoslabs/tools:aptos-node-v1.17.2
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            set -euxo pipefail
+            BACKUP_NAME="${BACKUP_NAME:-default_backup_name}"
+            mkdir -p /opt/aptos/etc/restore
+            # Download backup.yaml from GitHub
+            curl -s https://raw.githubusercontent.com/aptos-labs/aptos-networks/main/testnet/backups/gcs.yaml > /opt/aptos/etc/restore/backup.yaml
+            # Cleanup aptosdb
+            if [ -f /opt/aptos/data/restore-failed ] || \
+                [ ! -f /opt/aptos/data/restore-uid ] || \
+                [ "$(cat /opt/aptos/data/restore-uid)" != "" ]; then
+              rm -rf /opt/aptos/data/db /opt/aptos/data/restore-{complete,failed}
+              echo "" > /opt/aptos/data/restore-uid
+            fi
+
+            [ -f /opt/aptos/data/restore-complete ] && exit 0
+            # Start restore process
+            /usr/local/bin/aptos-debugger aptos-db restore bootstrap-db \
+              --concurrent-downloads 16 \
+              --target-db-dir /opt/aptos/data/db \
+              --metadata-cache-dir /opt/aptos/data/aptos-restore-metadata \
+              --ledger-history-start-version 0 \
+              --command-adapter-config /opt/aptos/etc/restore/backup.yaml
+
+            if [ $? -gt 0 ]; then
+              # Mark restore as failed
+              touch /opt/aptos/data/restore-failed
+              exit 1
+            else
+              # Success, remove the marker
+              rm -f /opt/aptos/data/restore-failed
+              touch /opt/aptos/data/restore-complete
+            fi
+        volumeMounts:
+        - name: aptos-config
+          mountPath: /opt/aptos/etc
+        - name: aptos-restore
+          mountPath: /opt/aptos/etc/restore
+        - name: aptos-genesis
+          mountPath: /opt/aptos/genesis
+        - name: aptos-data
+          mountPath: /opt/aptos/data     
+      restartPolicy: Never
+      volumes:
+      - name: aptos-config
+        configMap:
+          name: testnet-aptos-fullnode
+      - name: aptos-restore
+        emptyDir: {}
+      - name: aptos-genesis
+        emptyDir: {}
+      - name: aptos-data
+        persistentVolumeClaim:
+          claimName: testnet-aptos-fullnode-e1

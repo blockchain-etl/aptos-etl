@@ -1,0 +1,37 @@
+.fullnode-defaults: &fullnode-defaults
+  variables:
+    NAME: $TARGET
+    CHART_PATH: aptos-fullnodes
+    NAMESPACE: $TARGET
+    ARGO_PROJECT: fullnodes
+  parallel:
+    matrix:
+    - PROJECT:
+      - aptos
+      ENV: prod
+      TARGET:
+      - mainnet
+      - testnet
+
+
+
+full-node-render:
+  extends: .render
+  <<: *fullnode-defaults
+  script:
+    - helm template "$NAME" "$CHART_PATH" -n "$NAMESPACE" -f "${CHART_PATH}/values.${PROJECT}.${ENV}.${TARGET}.yaml" > "${NAME}-${PROJECT}-${ENV}.yaml"
+
+full-node-kubeconform:
+  extends: .kubeconform
+  needs: [full-node-render]
+  <<: *fullnode-defaults
+
+full-node-trivy:
+  extends: .trivy
+  needs: [full-node-render]
+  <<: *fullnode-defaults
+
+full-node-deploy:
+  extends: .deploy
+  dependencies: [full-node-render]
+  <<: *fullnode-defaults

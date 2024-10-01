@@ -148,11 +148,11 @@ resource "google_project_iam_member" "secrets_ro_sa" {
   member  = google_service_account.secrets_ro.member
 }
 
-resource "google_service_account_iam_binding" "secrets_ro_avp" {
-  service_account_id = google_service_account.secrets_ro.name
-  role               = "roles/iam.workloadIdentityUser"
+# resource "google_service_account_iam_binding" "secrets_ro_avp" {
+#   service_account_id = google_service_account.secrets_ro.name
+#   role               = "roles/iam.workloadIdentityUser"
 
-  members = [
-    "serviceAccount:${local.project_id}.svc.id.goog[argocd/argocd-repo-server]",
-  ]
-}
+#   members = [
+#     "serviceAccount:${local.project_id}.svc.id.goog[argocd/argocd-repo-server]",
+#   ]
+# }

@@ -11,6 +11,10 @@ resource "google_composer_environment" "composer_pipelines" {
 
     software_config {
       image_version = var.composer_version
+      airflow_config_overrides = {
+        core-enable_xcom_pickling = true,
+      }
+
     }
 
     workloads_config {
