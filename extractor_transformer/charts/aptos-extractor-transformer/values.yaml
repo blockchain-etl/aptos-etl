@@ -19,10 +19,7 @@ mainnet:
       METRICS_PORT=4000
       HEALTH_CHECKS_PORT=8080
       OUTPUT_DIR="./output/"
-      APTOS_GRPC_ADDR = "https://grpc.mainnet.aptoslabs.com:443"
-      APTOS_GRPC_AUTH = "aptoslabs_GC1m915ySoq_Ei4dKom14KzNQYdnPNuhxdqkoZbWMzkZe"
-      APTOS_GRPC_ADDR_FALLBACK = "https://grpc.mainnet.aptoslabs.com:443"
-      APTOS_GRPC_AUTH_FALLBACK = "aptoslabs_GC1m915ySoq_Ei4dKom14KzNQYdnPNuhxdqkoZbWMzkZe"
+      APTOS_GRPC_ADDR = "http://mainnet-aptos-fullnode:50051"
   resources:
     memory:
       requests: 500Mi
@@ -41,10 +38,8 @@ mainnet:
     health_checks_port: 8080
     output_dir: ./output/
     aptos_grpc_addr: http://mainnet-aptos-fullnode:50051
-    aptos_grpc_auth: aptoslabs_GC1m915ySoq_Ei4dKom14KzNQYdnPNuhxdqkoZbWMzkZe
-    aptos_grpc_addr_fallback: https://grpc.mainnet.aptoslabs.com:443
-    aptos_grpc_auth_fallback: aptoslabs_GC1m915ySoq_Ei4dKom14KzNQYdnPNuhxdqkoZbWMzkZe
   image:
+    repository: gcr.io/aptos-bq/aptos-extractor-transformer-mainnet
     tag: aa84f6f
   terminationGracePeriodSeconds: 300
 
@@ -66,9 +61,6 @@ testnet:
       HEALTH_CHECKS_PORT=8080
       OUTPUT_DIR="./output/"
       APTOS_GRPC_ADDR="http://testnet-aptos-fullnode:50051"
-      APTOS_GRPC_AUTH="aptoslabs_5rQm5LRvozq_7tSD2AEYBjuxLYXe3BFXgWf2UPkZMHm1r"
-      APTOS_GRPC_ADDR_FALLBACK = "https://grpc.testnet.aptoslabs.com:443"
-      APTOS_GRPC_AUTH_FALLBACK = "aptoslabs_5rQm5LRvozq_7tSD2AEYBjuxLYXe3BFXgWf2UPkZMHm1r"
   resources:
     memory:
       requests: 200Mi
@@ -87,9 +79,7 @@ testnet:
     health_checks_port: 8080
     output_dir: ./output/
     aptos_grpc_addr: "http://testnet-aptos-fullnode:50051"
-    aptos_grpc_auth: aptoslabs_5rQm5LRvozq_7tSD2AEYBjuxLYXe3BFXgWf2UPkZMHm1r
-    aptos_grpc_addr_fallback: https://grpc.testnet.aptoslabs.com:443
-    aptos_grpc_auth_fallback: "aptoslabs_5rQm5LRvozq_7tSD2AEYBjuxLYXe3BFXgWf2UPkZMHm1r"
   image:
+    repository: gcr.io/aptos-bq/aptos-extractor-transformer-testnet
     tag: aa84f6f
   terminationGracePeriodSeconds: 300

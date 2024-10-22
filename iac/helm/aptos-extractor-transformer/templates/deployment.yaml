@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: aptos-extractor-transformer
+  name: aptos-extractor-transformer
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aptos-extractor-transformer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aptos-extractor-transformer
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      containers:
+        - name: aptos-extractor-transformer
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          command: ["sh"]
+          args:
+          - -c
+          - >-
+            blockchain_etl_indexer index-subscription indexing-ranges-subscription-{{ .Values.namespace }}
+          env:
+          - name: RUST_LOG
+            value: {{ .Values.rust_log }}
+          resources:
+            requests:
+              memory: {{ .Values.resources.memory.requests }}
+            limits:
+              memory: {{ .Values.resources.memory.limits }}
+          ports:
+          - containerPort: 4000
+          - containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/.env
+              subPath: .env
+      volumes:
+        - name: config-volume
+          configMap:
+            name: extractor-transformer-config 
+      restartPolicy: Always
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}

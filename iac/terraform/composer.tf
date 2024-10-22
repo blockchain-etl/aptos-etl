@@ -1,11 +1,11 @@
 resource "google_composer_environment" "composer_pipelines" {
+  for_each = { for env in var.enabled_networks : env => env }
   provider = google-beta
-  for_each = toset(var.composer_environment_names)
-  name     = each.value
+  name     = each.key
   region   = local.region
 
   storage_config {
-    bucket = "${local.project_id_short}-composer-dag-bucket-${each.value}"
+    bucket = "${local.project_id_short}-composer-dag-bucket-${each.key}"
   }
   config {
 
@@ -41,14 +41,17 @@ resource "google_composer_environment" "composer_pipelines" {
     environment_size = "ENVIRONMENT_SIZE_MEDIUM"
 
     node_config {
-      network         = google_compute_network.aptos-bq.id
-      subnetwork      = google_compute_subnetwork.aptos-bq_k8s.id
+      network         = google_compute_network.aptos_bq[each.key].id
+      subnetwork      = google_compute_subnetwork.aptos_bq_k8s[each.key].id
       service_account = google_service_account.gcp_ingest_sa.name
     }
   }
 
   depends_on = [
     google_storage_bucket.composer_dag_bucket,
-    google_service_account_iam_member.gcp_ingest_sa
+    google_service_account_iam_member.gcp_ingest_sa,
+    google_service_account.gcp_ingest_sa,
+    google_project_iam_member.composer_service_agent_role,
+    google_project_iam_member.gcp_ingest_sa
   ]
 }

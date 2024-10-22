@@ -74,17 +74,17 @@ variable "gke_node_disk_size_gb" {
   default = 200
 }
 
-variable "private_cidr_a" {
-  type = string
-}
+# variable "private_cidr_a" {
+#   type = string
+# }
 
-variable "private_cidr_pods" {
-  type = string
-}
+# variable "private_cidr_pods" {
+#   type = string
+# }
 
-variable "private_cidr_services" {
-  type = string
-}
+# variable "private_cidr_services" {
+#   type = string
+# }
 
 variable "min_master_version" {
   type = string
@@ -128,4 +128,63 @@ variable "region" {
 
 variable "schemas" {
   type = list(string)
+}
+
+variable "coordinator_image_tag" {
+  type = string
+}
+
+variable "transformer_mainnet_image_tag" {
+  type = string
+}
+
+variable "transformer_testnet_image_tag" {
+  type = string
+}
+
+variable "coordinator_image_repo" {
+  type = string
+}
+
+variable "transformer_mainnet_image_repo" {
+  type = string
+}
+
+variable "transformer_testnet_image_repo" {
+  type = string
+}
+
+variable "aptos_fullnodes_mainnet_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "enabled_networks" {
+  description = "Select networks to deploy (e.g., 'mainnet', 'testnet', or both)."
+  type        = list(string)
+  default     = ["mainnet"] # Default to mainnet, but you can select both if needed.
+}
+
+variable "private_cidr_a" {
+  type = map(string)
+  default = {
+    mainnet = "172.16.136.0/23"
+    testnet = "172.16.138.0/23" # You can adjust testnet as needed
+  }
+}
+
+variable "private_cidr_pods" {
+  type = map(string)
+  default = {
+    mainnet = "10.108.0.0/14"
+    testnet = "10.112.0.0/14" # You can adjust testnet as needed
+  }
+}
+
+variable "private_cidr_services" {
+  type = map(string)
+  default = {
+    mainnet = "10.84.96.0/20"
+    testnet = "10.84.112.0/20" # You can adjust testnet as needed
+  }
 }

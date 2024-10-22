@@ -1,0 +1,32 @@
+environment:
+serviceAccountName: aptos-app-sa
+rust_log: info
+
+replicaCount: 1
+namespace: mainnet
+configMap:
+  data: |
+    QUEUE_NAME_BLOCKS="block-records-mainnet"
+    QUEUE_NAME_RESOURCES="resource-records-mainnet"
+    QUEUE_NAME_CHANGES="change-records-mainnet"
+    QUEUE_NAME_TRANSACTIONS="transaction-records-mainnet"
+    QUEUE_NAME_EVENTS="event-records-mainnet"
+    QUEUE_NAME_MODULES="module-records-mainnet"
+    QUEUE_NAME_SIGNATURES="signature-records-mainnet"
+    QUEUE_NAME_TABLE_ITEMS="table-item-records-mainnet"
+    ENABLE_METRICS=true
+    METRICS_PORT=4000
+    HEALTH_CHECKS_PORT=8080
+    OUTPUT_DIR="./output/"
+    APTOS_GRPC_ADDR = "http://mainnet-aptos-fullnode:50051"
+    APTOS_GRPC_AUTH = "aptoslabs_GC1m915ySoq_Ei4dKom14KzNQYdnPNuhxdqkoZbWMzkZe"
+    APTOS_GRPC_ADDR_FALLBACK = "https://grpc.mainnet.aptoslabs.com:443"
+    APTOS_GRPC_AUTH_FALLBACK = "aptoslabs_GC1m915ySoq_Ei4dKom14KzNQYdnPNuhxdqkoZbWMzkZe"
+resources:
+  memory:
+    requests: 500Mi
+    limits: 1Gi
+image:
+  repository: gcr.io/aptos-bq/aptos-extractor-transformer-mainnet
+  tag: aa84f6f
+terminationGracePeriodSeconds: 300

@@ -1,0 +1,33 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/instance: keda
+    scaledobject.keda.sh/name: {{ .Values.name }}
+spec:
+  scaleTargetRef:
+    name: {{ .Values.scaleTargetRefName }}
+  idleReplicaCount: {{ .Values.idleReplicaCount | default 1 }}
+  minReplicaCount: {{ .Values.minReplicaCount | default 2 }}
+  maxReplicaCount: {{ .Values.maxReplicaCount | default 10 }}
+  triggers:
+  - type: gcp-pubsub
+    authenticationRef:
+      name: keda-clustertrigger-auth-gcp-credentials
+      kind: ClusterTriggerAuthentication
+    metadata:
+      mode: "SubscriptionSize"
+      value: "{{ .Values.subscriptionSize }}" 
+      subscriptionName: {{ .Values.subscriptionName }}
+
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ClusterTriggerAuthentication
+metadata:
+  name: keda-clustertrigger-auth-gcp-credentials
+spec:
+  podIdentity:
+    provider: gcp

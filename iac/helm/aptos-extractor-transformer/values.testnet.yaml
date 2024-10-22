@@ -1,0 +1,25 @@
+environment:
+serviceAccountName: aptos-app-sa
+rust_log: info
+
+replicaCount: 1
+namespace: testnet
+project_id: test_project_id
+configMap:
+  data: |
+    ENABLE_METRICS=true
+    METRICS_PORT=4000
+    HEALTH_CHECKS_PORT=8080
+    OUTPUT_DIR="./output/"
+    APTOS_GRPC_ADDR="http://testnet-aptos-fullnode:50051"
+    APTOS_GRPC_AUTH="aptoslabs_5rQm5LRvozq_7tSD2AEYBjuxLYXe3BFXgWf2UPkZMHm1r"
+    APTOS_GRPC_ADDR_FALLBACK = "https://grpc.testnet.aptoslabs.com:443"
+    APTOS_GRPC_AUTH_FALLBACK = "aptoslabs_5rQm5LRvozq_7tSD2AEYBjuxLYXe3BFXgWf2UPkZMHm1r"
+resources:
+  memory:
+    requests: 200Mi
+    limits: 650Mi
+image:
+  repository: gcr.io/aptos-bq/aptos-extractor-transformer-testnet
+  tag: aa84f6f
+terminationGracePeriodSeconds: 300

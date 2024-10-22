@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: extractor-transformer-config
+  namespace: {{ .Values.namespace }}
+data: 
+  .env: |
+    QUEUE_NAME_BLOCKS="{{ .Values.project_id }}-aptos_testnet_blocks"
+    QUEUE_NAME_RESOURCES="{{ .Values.project_id }}-aptos_testnet_resources"
+    QUEUE_NAME_CHANGES="{{ .Values.project_id }}-aptos_testnet_changes"
+    QUEUE_NAME_TRANSACTIONS="{{ .Values.project_id }}-aptos_testnet_transactions"
+    QUEUE_NAME_EVENTS="{{ .Values.project_id }}-aptos_testnet_events"
+    QUEUE_NAME_MODULES="{{ .Values.project_id }}-aptos_testnet_modules"
+    QUEUE_NAME_SIGNATURES="{{ .Values.project_id }}-aptos_testnet_signatures"
+    QUEUE_NAME_TABLE_ITEMS="{{ .Values.project_id }}-aptos_testnet_table_items"
+{{ .Values.configMap.data | indent 4 }}

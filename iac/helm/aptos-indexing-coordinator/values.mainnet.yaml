@@ -1,0 +1,14 @@
+environment: 
+serviceAccountName: aptos-app-sa
+GCPServiceAccountName: aptos-bq-prod-aptos-app@aptos-bq.iam.gserviceaccount.com
+
+replicaCount: 1
+namespace: mainnet
+env:
+  node_address: http://mainnet-aptos-fullnode:8080/v1
+  fallback_node_address: https://mainnet.aptoslabs.com/v1
+  gcp_project_id: aptos-bq
+  network: mainnet
+image:
+  repository: ghcr.io/bcwresearch/aptos-etl/aptos-indexing-coordinator
+  tag: aa84f6f

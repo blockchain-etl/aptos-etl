@@ -1,0 +1,8 @@
+name: pubsub-scaledobject-mainnet
+namespace: mainnet
+scaleTargetRefName: aptos-extractor-transformer
+subscriptionSize: "5"
+subscriptionName: "indexing-ranges-subscription-mainnet"
+idleReplicaCount: 1
+minReplicaCount: 2
+maxReplicaCount: 5

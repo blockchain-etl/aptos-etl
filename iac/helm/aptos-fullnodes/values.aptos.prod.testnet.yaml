@@ -129,7 +129,7 @@ logging:
   address:
 
 backup:
-  enable: true
+  enable: false
   image:
     # -- Image repo to use for backup images
     repo: aptoslabs/tools

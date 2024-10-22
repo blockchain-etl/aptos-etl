@@ -18,7 +18,7 @@ spec:
       serviceAccountName: {{ .Values.serviceAccountName }}
       containers:
         - name: aptos-extractor-coordinator
-          image: gcr.io/aptos-bq/aptos-indexing-coordinator:{{ .Values.mainnet.image.tag }}
+          image: {{ .Values.mainnet.image.repository }}:{{ .Values.mainnet.image.tag }}
           env:
             - name: NODE_ADDRESS
               value: {{ .Values.mainnet.env.node_address }}
@@ -50,7 +50,7 @@ spec:
       serviceAccountName: {{ .Values.serviceAccountName }}
       containers:
       - name: aptos-extractor-coordinator
-        image: gcr.io/aptos-bq/aptos-indexing-coordinator:{{ .Values.testnet.image.tag }}
+        image: {{ .Values.testnet.image.repository }}:{{ .Values.testnet.image.tag }}
         env:
           - name: NODE_ADDRESS
             value: {{ .Values.testnet.env.node_address }}

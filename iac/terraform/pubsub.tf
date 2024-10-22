@@ -22,7 +22,8 @@ resource "google_pubsub_topic" "records_topics" {
     for item in local.schemas_and_network_types : "${item.schema}-${item.network}" => item
   }
 
-  name = "${trimsuffix(each.value.schema, "s")}-records-${each.value.network}"
+  # Replace underscores with hyphens to ensure correct formatting
+  name = "${replace(trimsuffix(each.value.schema, "s"), "_", "-")}-records-${each.value.network}"
 
   depends_on = [google_pubsub_schema.pubsub_schemas]
   schema_settings {
@@ -30,6 +31,7 @@ resource "google_pubsub_topic" "records_topics" {
     encoding = "BINARY"
   }
 }
+
 
 resource "google_pubsub_topic" "errors_topics" {
   for_each = {
@@ -51,10 +53,11 @@ resource "google_pubsub_topic" "transaction_index_topics" {
 
 resource "google_pubsub_subscription" "records_subs" {
   for_each = {
-    for item in local.schemas_and_network_types : "${item.schema}-${item.network}" => item
+    for item in local.schemas_and_network_types : "${replace(trimsuffix(item.schema, "s"), "_", "-")}-${item.network}" => item
   }
-  name                       = "${trimsuffix(each.value.schema, "s")}-records-${each.value.network}-sub"
-  topic                      = "projects/${local.project_id}/topics/${trimsuffix(each.value.schema, "s")}-records-${each.value.network}"
+
+  name                       = "${replace(trimsuffix(each.value.schema, "s"), "_", "-")}-records-${each.value.network}-sub"
+  topic                      = "projects/${local.project_id}/topics/${replace(trimsuffix(each.value.schema, "s"), "_", "-")}-records-${each.value.network}"
   message_retention_duration = "604800s"
   ack_deadline_seconds       = 10
 
@@ -62,8 +65,11 @@ resource "google_pubsub_subscription" "records_subs" {
     ttl = "2678400s"
   }
 
-  depends_on = [google_pubsub_topic.records_topics]
+  depends_on = [
+    google_pubsub_topic.records_topics
+  ]
 }
+
 
 resource "google_pubsub_subscription" "transaction_index_subs" {
   for_each                   = local.index_topics
@@ -77,4 +83,41 @@ resource "google_pubsub_subscription" "transaction_index_subs" {
 
   depends_on = [google_pubsub_topic.transaction_index_topics]
 }
+
+resource "google_pubsub_subscription" "indexing_ranges_mainnet" {
+  count = contains(var.enabled_networks, "mainnet") ? 1 : 0
+
+  name                       = "indexing-ranges-subscription-mainnet"
+  topic                      = "projects/${var.project_id}/topics/transaction-indexing-ranges-mainnet"
+  message_retention_duration = "604800s"
+  ack_deadline_seconds       = 10
+
+  expiration_policy {
+    ttl = "2678400s"
+  }
+
+  depends_on = [
+    google_pubsub_topic.transaction_index_topics,
+  ]
+}
+
+# Indexing Range Subscription for Testnet
+resource "google_pubsub_subscription" "indexing_ranges_testnet" {
+  count = contains(var.enabled_networks, "testnet") ? 1 : 0
+
+  name                       = "indexing-ranges-subscription-testnet"
+  topic                      = "projects/${var.project_id}/topics/transaction-indexing-ranges-testnet"
+  message_retention_duration = "604800s"
+  ack_deadline_seconds       = 10
+
+  expiration_policy {
+    ttl = "2678400s"
+  }
+
+  depends_on = [
+    google_pubsub_topic.transaction_index_topics,
+  ]
+}
+
+
 

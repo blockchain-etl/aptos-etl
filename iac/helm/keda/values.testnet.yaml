@@ -1,0 +1,8 @@
+name: pubsub-scaledobject-testnet
+namespace: testnet
+scaleTargetRefName: aptos-extractor-transformer
+subscriptionSize: "5"
+subscriptionName: "indexing-ranges-subscription-testnet"
+idleReplicaCount: 1
+minReplicaCount: 2
+maxReplicaCount: 5

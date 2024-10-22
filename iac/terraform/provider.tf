@@ -29,12 +29,19 @@ terraform {
       source  = "hashicorp/local"
       version = "2.5.1"
     }
-
+    helm = {
+      source  = "hashicorp/helm"
+      version = "2.16.1"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.33.0"
+    }
   }
 
   backend "gcs" {
-    bucket = <The backend GCS bucket name>
-    prefix = "main"
+    bucket = <BUCKET_NAME>
+    prefix = "aptos"
   }
 }
 

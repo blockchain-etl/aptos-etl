@@ -1,5 +1,5 @@
 resource "google_storage_bucket" "composer_dag_bucket" {
-  for_each      = toset(var.composer_environment_names)
+  for_each      = toset(var.enabled_networks)
   name          = "${local.project_id_short}-composer-dag-bucket-${each.value}"
   location      = local.region
   force_destroy = true
@@ -28,7 +28,7 @@ resource "google_storage_bucket" "aptos_buckets" {
   name          = "${local.project_id}-${each.key}"
   location      = local.region
   storage_class = "STANDARD"
-  force_destroy = false
+  force_destroy = true
 }
 
 locals {

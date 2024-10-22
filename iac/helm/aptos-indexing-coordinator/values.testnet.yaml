@@ -1,0 +1,14 @@
+environment: 
+serviceAccountName: aptos-app-sa
+GCPServiceAccountName: aptos-bq-prod-aptos-app@aptos-bq.iam.gserviceaccount.com
+
+replicaCount: 1
+namespace: testnet
+env:
+  node_address: https://testnet.aptoslabs.com/v1
+  fallback_node_address: https://testnet.aptoslabs.com/v1
+  gcp_project_id: aptos-bq
+  network: testnet
+image:
+  repository: ghcr.io/bcwresearch/aptos-etl/aptos-indexing-coordinator
+  tag: aa84f6f

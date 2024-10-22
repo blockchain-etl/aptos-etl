@@ -118,7 +118,7 @@ logging:
   address:
 
 backup:
-  enable: true
+  enable: false
   image:
     # -- Image repo to use for backup images
     repo: aptoslabs/tools
@@ -219,10 +219,10 @@ restore:
     restore_era:
 
 livenessProbe:
-  enabled: true
+  enabled: false
 
 readinessProbe:
-  enabled: true
+  enabled: false
 
 securityContext:
   enabled: true

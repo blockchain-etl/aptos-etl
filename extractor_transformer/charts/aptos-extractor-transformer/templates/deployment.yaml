@@ -18,7 +18,7 @@ spec:
       serviceAccountName: {{ .Values.serviceAccountName }}
       containers:
         - name: aptos-extractor-transformer
-          image: gcr.io/aptos-bq/aptos-extractor-transformer-mainnet:{{ .Values.mainnet.image.tag }}
+          image: {{ .Values.mainnet.image.repository }}:{{ .Values.mainnet.image.tag }}
           command: ["sh"]
           args:
           - -c
@@ -66,7 +66,7 @@ spec:
       serviceAccountName: {{ .Values.serviceAccountName }}
       containers:
         - name: aptos-extractor-transformer
-          image: gcr.io/aptos-bq/aptos-extractor-transformer-testnet:{{ .Values.testnet.image.tag }}
+          image: {{ .Values.testnet.image.repository }}:{{ .Values.testnet.image.tag }}
           command: ["sh"]
           args:
           - -c

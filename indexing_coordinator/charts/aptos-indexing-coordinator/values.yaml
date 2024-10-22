@@ -11,6 +11,7 @@ mainnet:
     gcp_project_id: aptos-bq
     network: mainnet
   image:
+    repository: gcr.io/aptos-bq/aptos-indexing-coordinator
     tag: aa84f6f
 
 testnet:
@@ -22,4 +23,5 @@ testnet:
     gcp_project_id: aptos-bq
     network: testnet
   image:
+    repository: gcr.io/aptos-bq/aptos-indexing-coordinator
     tag: aa84f6f

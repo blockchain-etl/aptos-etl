@@ -1,6 +1,6 @@
 gke_master_ipv4_cidr_block = <GKE master node IP CIDR>
 environment                = <environment name>
-project_id                 = <GCP project name>
+project_id                 = <PROJECT ID>
 project_id_short           = <GCP project short name>
 project_number             = <GCP project number>
 region                     = <GCP region>
@@ -10,6 +10,10 @@ private_cidr_pods          = <pod network IP CIDR>
 private_cidr_services      = <service network IP CIDR>
 min_master_version         = <master node Kubernetes version>
 nodepool_version           = <worker node kubernetess version>
+coordinator_image_tag      = <coordinator image tag>
+transformer_image_tag      = <transformer image tag>
+coordinator_image_repo     = <coordinator image repository>
+transformer_image_repo     = <transformer image repository>
 
 composer_version           = "composer-2.6.2-airflow-2.6.3"
 composer_environment_names = ["mainnet-testnet"]
@@ -35,3 +39,6 @@ schemas = [
   "transactions",
   "blocks",
 ]
+
+// Use ["mainnet", "testnet"] to create both environment
+enabled_networks = ["mainnet","testnet"]

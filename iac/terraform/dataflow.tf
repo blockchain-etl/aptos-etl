@@ -8,7 +8,7 @@ resource "google_dataflow_flex_template_job" "aptos_dataflow_jobs" {
   parameters = {
     outputTopic       = "projects/${local.project_id}/topics/errors-${each.value}-mainnet"
     protoSchemaPath   = "gs://${local.project_id}-aptos_schemas/${each.value}.pb"
-    inputSubscription = "projects/${local.project_id}/subscriptions/${trimsuffix(each.value, "s")}-records-mainnet-sub"
+    inputSubscription = "projects/${local.project_id}/subscriptions/${replace(trimsuffix(each.value, "s"), "_", "-")}-records-mainnet-sub"
     outputTableSpec   = "aptos-data-pdp:crypto_aptos_mainnet_us.${each.value}"
     fullMessageName = "aptos.${each.value}.${
       each.value == "blocks" ? "Block" :
