@@ -31,9 +31,6 @@ use std::io::{BufRead, BufReader};
 /// The directory containing the examples test range
 pub const TEST_EXAMPLE_DIRECTORY: &str = "./tests/examples";
 
-#[cfg(feature = "SOLANA_BIGTABLE")]
-use blockchain_etl_indexer::solana_config::data_sources::bigtable;
-
 // CLI Parsing information
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -253,24 +250,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // Loads the .env file, raises an error otherwise
     dotenvy::dotenv().expect(".env file is required");
-
-    // Set up the RequestBuilder to be used in the ETL-Core code.
-    // NOTE: the reqwest docs suggest reusing a single client, rather than using multiple
-    // the endpoint and request headers will be the same for every request, so
-    // we will clone this request builder, rather than constructing a new one every time.
-    #[cfg(feature = "SOLANA")]
-    let request_builder = {
-        let endpoint = dotenvy::var("ENDPOINT")
-            .expect("ENDPOINT should exist in .env file")
-            .parse::<String>()
-            .unwrap();
-        let connection_timeout = std::time::Duration::from_secs(constants::CONNECTION_TIMEOUT);
-        let client_builder = reqwest::Client::builder().connect_timeout(connection_timeout);
-
-        let client = client_builder.build().unwrap();
-        let headers = request::get_headers();
-        client.post(endpoint).headers(headers)
-    };
 
     let cli = Cli::parse();
 

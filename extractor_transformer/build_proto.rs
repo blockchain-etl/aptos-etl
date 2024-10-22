@@ -1,5 +1,3 @@
-#[cfg(feature = "SOLANA")]
-include!("src/solana_config/build_proto.rs");
 #[cfg(feature = "APTOS")]
 include!("src/aptos_config/build_proto.rs");
 
