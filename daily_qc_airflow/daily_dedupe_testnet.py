@@ -4,8 +4,8 @@ Extract hourly block data by running Aptos ETL
 """
 
 from airflow.models import Variable
-TEMP_PROJECT = "aptos-bq" #Variable.get("aptos_output_project")
-FINAL_PROJECT = f"aptos-data-pdp"
+
+FINAL_PROJECT = Variable.get("aptos_output_project")
 NETWORK_TYPE = "testnet" # TODO: environment variable?
 FINAL_DATASET = f"crypto_aptos_{NETWORK_TYPE}_us"
 
@@ -22,7 +22,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 from airflow.providers.google.cloud.transfers.gcs_to_local import GCSToLocalFilesystemOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
 
-#from google_chat_callbacks import task_fail_alert, task_success_alert
+from google_chat_callbacks import task_fail_alert
 
 TODATE = "{{ (logical_date + macros.timedelta(days=1)).strftime('%Y-%m-%d') }}"
 YESTERDATE = "{{ logical_date.strftime('%Y-%m-%d') }}"
@@ -48,10 +48,10 @@ default_args = {
     "depends_on_past": False,
     "start_date": datetime(2024, 4, 19),
     "provide_context": True,
-    "retries": 3,
+    "retries": 4,
     "retry_delay": timedelta(minutes=1),
     #"on_success_callback": task_success_alert,
-    #"on_failure_callback": task_fail_alert,
+    "on_failure_callback": task_fail_alert,
 }
 
 

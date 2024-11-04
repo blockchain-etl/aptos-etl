@@ -1,19 +1,7 @@
-"""dag_hourly_aptos_etl
-
-Extract hourly block data by running Aptos ETL
-"""
-
-'''
-TODOS:
-    use separate buckets, instead of a single bucket with multiple directories
-
-    how do you set environment variables in cloud composer?
-'''
-
 from airflow.models import Variable
-OUTPUT_PROJECT = "aptos-bq" #Variable.get("aptos_output_project")
-PUBLIC_PROJECT = "aptos-data-pdp"
-NETWORK_TYPE = "testnet" # TODO: environment variable?
+OUTPUT_PROJECT = Variable.get("aptos_output_project")
+PUBLIC_PROJECT = Variable.get("aptos_public_project")
+NETWORK_TYPE = "testnet"
 TEMP_DATASET = f"{NETWORK_TYPE}_temp"
 FINAL_DATASET = f"crypto_aptos_{NETWORK_TYPE}_us"
 

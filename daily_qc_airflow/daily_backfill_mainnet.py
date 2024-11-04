@@ -3,16 +3,16 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.google.cloud.hooks.pubsub import PubSubHook
-from airflow.models import Variable
 from datetime import timedelta, datetime
 from airflow.operators.empty import EmptyOperator
 from airflow.decorators import dag, task
+from airflow.models import Variable
 
-#from google.cloud import pubsub_v1
 from pubsub_range_pb2 import IndexingRange
+from google_chat_callbacks import task_fail_alert
 
-TEMP_PROJECT = "aptos-bq" #Variable.get("aptos_output_project")
-FINAL_PROJECT = f"aptos-data-pdp"
+TEMP_PROJECT = Variable.get("aptos_internal_project")
+FINAL_PROJECT = Variable.get("aptos_output_project")
 NETWORK_TYPE = "mainnet" # TODO: environment variable?
 FINAL_DATASET = f"crypto_aptos_{NETWORK_TYPE}_us"
 INDEXING_RANGES_TOPIC_NAME = f"transaction-indexing-ranges-{NETWORK_TYPE}"
@@ -30,6 +30,7 @@ with DAG(
         'owner': 'airflow',
         'depends_on_past': False,
         'start_date': datetime(2024, 5, 1),
+        "on_failure_callback": task_fail_alert,
         'email_on_failure': False,
         'email_on_retry': False,
         'retries': 1,
