@@ -724,23 +724,29 @@ pub async fn extract_range(
             #[allow(unused_assignments)]
             let mut sig_cnt: Option<u64> = None;
 
-            // Create the records for signatures
+            // Create the records for signatures.  If not doing signatures, some work still needs
+            // to be done in order to get signature counts.
 
-            if table_options.do_signatures() {
+            if table_options.do_signatures() || table_options.do_transactions() {
                 debug!("[Tx {}] Signature Records", cur_version);
                 match processing::tables::signatures::get_signatures(&tx_extract) {
                     Ok(signatures) => {
                         sig_cnt = signatures.as_ref().map(|sigs| sigs.len() as u64);
-                        #[allow(clippy::map_flatten)]
-                        let signature_timestamps: Vec<UnixTimestamp> = signatures
-                            .iter()
-                            .map(|sig| sig.iter().map(|sig| sig.block_unixtimestamp.clone()))
-                            .flatten()
-                            .collect();
-                        all_signature_timestamps.extend(signature_timestamps);
-                        signatures
-                            .into_iter()
-                            .for_each(|recs| all_signature_records.extend(recs));
+                        // If we are doing signatures, we need to do more work other than counting
+                        if table_options.do_signatures() {
+                            #[allow(clippy::map_flatten)]
+                            let signature_timestamps: Vec<
+                                UnixTimestamp,
+                            > = signatures
+                                .iter()
+                                .map(|sig| sig.iter().map(|sig| sig.block_unixtimestamp.clone()))
+                                .flatten()
+                                .collect();
+                            all_signature_timestamps.extend(signature_timestamps);
+                            signatures
+                                .into_iter()
+                                .for_each(|recs| all_signature_records.extend(recs));
+                        }
                     }
                     Err(error) => {
                         error!(

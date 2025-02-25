@@ -1,4 +1,4 @@
-FROM rust:1.80.1 as builder
+FROM rust:1.84.1 as builder
 WORKDIR /usr/src/blockchain_etl_indexer
 
 # Install rustfmt
@@ -9,7 +9,7 @@ COPY . .
 RUN apt update && apt install -y protobuf-compiler libpq5 libdw-dev
 ARG FEATURE
 
-ENV RUSTFLAGS="-C target-feature=+crt-static"
+ENV RUSTFLAGS="-C target-feature=+crt-static -C codegen_units=1"
 # Use the build-time argument to specify features
 RUN cargo install --path . --features $FEATURE --target=x86_64-unknown-linux-gnu
 

@@ -5,7 +5,7 @@ use super::super::traits::TryEncode;
 
 #[derive(Debug, Clone)]
 pub enum VisibilityError {
-    DecodeError(prost::DecodeError, i32),
+    DecodeError(prost::UnknownEnumValue, i32),
     Unspecified,
 }
 

@@ -4,6 +4,7 @@ use super::{
     movetype::MoveTypeError,
 };
 use aptos_protos::transaction::v1 as input_protos;
+use prost::UnknownEnumValue;
 
 const ABILITY_PREFIX: &str = "MOVE_ABILITY_";
 
@@ -11,6 +12,7 @@ const ABILITY_PREFIX: &str = "MOVE_ABILITY_";
 pub enum AbilityError {
     Unspecified,
     DecodeError(prost::DecodeError, i32),
+    UnkownVariant(UnknownEnumValue, Option<i32>),
     MissingPrefix(String),
     MoveType(MoveTypeError),
     MoveTypeContext,
@@ -21,6 +23,13 @@ impl std::fmt::Display for AbilityError {
         match self {
             Self::DecodeError(err, num) => {
                 write!(f, "Failed to decode Ability from number {}: {}", num, err)
+            }
+            Self::UnkownVariant(unk, num) => {
+                write!(f, "Failed to decode Ability");
+                if let Some(num) = num {
+                    write!(f, " from number {}", num);
+                }
+                std::fmt::Result::Ok(())
             }
             Self::Unspecified => write!(f, "Received an unspecified ability"),
             Self::MissingPrefix(string) => {
@@ -65,7 +74,7 @@ impl TryFrom<i32> for Ability {
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match input_protos::MoveAbility::try_from(value) {
             Ok(ability) => Ok(Self::from(ability)),
-            Err(error) => Err(AbilityError::DecodeError(error, value)),
+            Err(error) => Err(AbilityError::UnkownVariant(error, Some(value))),
         }
     }
 }

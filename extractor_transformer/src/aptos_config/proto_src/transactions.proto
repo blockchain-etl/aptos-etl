@@ -39,7 +39,7 @@ message Transaction {
 
         message Code {
             required string bytecode = 1;
-            required aptos.modules.Module.ExposedFunction abi = 2;
+            optional aptos.modules.Module.ExposedFunction abi = 2;
         }
 
         message TxPayload {

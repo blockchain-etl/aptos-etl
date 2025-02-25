@@ -5,13 +5,17 @@
 
 use chrono::Timelike;
 use chrono::{TimeZone, Utc};
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use prost::Message;
+use rand::Rng;
 use serde::Serialize;
 
 use google_cloud_storage::client::google_cloud_auth::credentials::CredentialsFile; // can get a "similar names but distinct types" error if we import this from the google_cloud_auth crate with mismatched crate versions
 use google_cloud_storage::client::{Client, ClientConfig};
 use google_cloud_storage::http::objects::upload::{Media, UploadObjectRequest, UploadType};
+
+use std::thread;
+use std::time::Duration;
 
 use crate::blockchain_config::proto_codegen::aptos::common::UnixTimestamp;
 
@@ -124,6 +128,8 @@ impl StreamPublisherConnectionClient {
                         let c_string: String = String::from(c);
                         let file_destination = [c_string, filename.clone().unwrap()].join("/");
                         let upload_type = UploadType::Simple(Media::new(file_destination));
+
+                        let mut sleep_counter = 1;
                         loop {
                             // if we want to use transactions at indices 0 and 1,
                             // then we need to split_off() with a value of 2. so if i=1 and prev_i=0, then 1-0+1 = 2.
@@ -146,10 +152,24 @@ impl StreamPublisherConnectionClient {
                                 )
                                 .await;
                             match uploaded {
-                                Ok(_) => break,
+                                Ok(obj) => {
+                                    debug!("Upload Results (DIR): {:?}", obj);
+                                    break;
+                                }
                                 Err(e) => {
                                     error!("Failed to upload to GCS. Error: {:?}", e);
-                                    warn!("Retrying GCS upload...");
+                                    let jitter: u64 =
+                                        rand::thread_rng().gen_range(0..=sleep_counter / 2);
+                                    let sleep_time = sleep_counter + jitter;
+                                    warn!("Retrying GCS upload after {} seconds...", sleep_time);
+
+                                    thread::sleep(Duration::from_secs(sleep_time));
+
+                                    // don't want to sleep for longer than 15 minutes
+                                    if sleep_counter < 900 {
+                                        sleep_counter = sleep_counter.pow(2).min(900);
+                                    }
+
                                     //panic!("Panicking due to failed GCS upload. Perhaps this should be uploaded as multi-part instead of simple? Or simply retried with backoff until success? Or maybe something has been misconfigured.");
                                 }
                             }
@@ -168,6 +188,7 @@ impl StreamPublisherConnectionClient {
             .into_iter()
             .reduce(|acc, record| acc + "\n" + &record)
             .unwrap_or(String::new()); // create an empty file if there are no records
+        let mut sleep_counter = 2;
         loop {
             let uploaded = gcs_client
                 .upload_object(
@@ -180,10 +201,22 @@ impl StreamPublisherConnectionClient {
                 )
                 .await;
             match uploaded {
-                Ok(_) => break,
+                Ok(obj) => {
+                    debug!("Upload Results: {:?}", obj);
+                    break;
+                }
                 Err(e) => {
                     error!("Failed to upload to GCS. Error: {:?}", e);
-                    warn!("Retrying GCS upload...");
+                    let jitter: u64 = rand::thread_rng().gen_range(0..=sleep_counter / 2);
+                    let sleep_time = sleep_counter + jitter;
+                    warn!("Retrying GCS upload after {} seconds...", sleep_time);
+
+                    thread::sleep(Duration::from_secs(sleep_time));
+
+                    // don't want to sleep for longer than 15 minute
+                    if sleep_counter < 900 {
+                        sleep_counter = sleep_counter.pow(2).min(900);
+                    }
                     //panic!("Panicking due to failed GCS upload. Perhaps this should be uploaded as multi-part instead of simple? Or simply retried with backoff until success? Or maybe something has been misconfigured.");
                 }
             }
@@ -213,7 +246,7 @@ impl StreamPublisherConnectionClient {
             )
             .await;
         match uploaded {
-            Ok(_) => (),
+            Ok(obj) => debug!("Upload Result: {:?}", obj),
             Err(e) => {
                 error!("Failed to upload to GCS. Error: {:?}", e);
                 panic!("Panicking due to failed GCS upload. Perhaps this should be uploaded as multi-part instead of simple? Or simply retried with backoff until success? Or maybe something has been misconfigured.");

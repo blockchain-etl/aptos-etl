@@ -1,3 +1,5 @@
+use crate::aptos_config::proto_codegen::aptos::signatures::signature::PublicKey;
+
 use super::super::super::proto_codegen::aptos::signatures as sig_protos;
 use super::super::deferred::{Deferred, DeferredError};
 use super::super::traits::Encode;
@@ -478,6 +480,27 @@ impl SignatureSubRecord {
         Ok(subrecords)
     }
 
+    pub fn from_abstractionsignature(value: input_protos::AbstractionSignature) -> Result<SignatureSubRecord, SignatureError> {
+        Ok(SignatureSubRecord {
+            buildtype: Deferred::Deferred,
+            public_key: PublicKey {
+                r#type: "Unspecified".to_string(),
+                value: "Abstraction".to_string(),
+                index: None,
+            },
+            signature: Some(sig_protos::signature::Signature {
+                r#type: "Abstraction".to_string(),
+                value: format!("0x{}", hex::encode(value.signature)),
+                index: None,
+            }),
+            threshold: None,
+            signer: Deferred::Deferred,
+            is_secondary: Deferred::DeferredFallback(None),
+            is_feepayer: Deferred::DeferredFallback(None),
+            is_sender: Deferred::DeferredFallback(None),
+        })
+    }
+
     /// Given an AccountSignature, returns SignatureSubRecords
     pub fn from_accountsignature(
         value: input_protos::AccountSignature,
@@ -502,6 +525,10 @@ impl SignatureSubRecord {
             (input_protos::account_signature::Type::Unspecified, _) => {
                 Err(SignatureError::UnspecifiedAccountSignature)
             }
+            (
+                input_protos::account_signature::Type::Abstraction,
+                Some(input_protos::account_signature::Signature::Abstraction(sigdata)),
+            ) => Ok(vec![Self::from_abstractionsignature(sigdata)?]),
             (_, None) => Err(SignatureError::MissingAccountSignatureData),
             (_, _) => Err(SignatureError::UnspecifiedAccountSignature),
         }

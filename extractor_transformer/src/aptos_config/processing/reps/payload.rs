@@ -11,7 +11,7 @@ use super::super::traits::{FromVecRef, TryEncode};
 use super::function::{Function, FunctionError};
 use super::moduleid::{ModuleId, MoveModuleIdError};
 use super::movetype::{MoveType, MoveTypeError};
-
+use log::{info, warn};
 #[derive(Debug, Clone)]
 pub enum TxPayloadError {
     UnspecifiedPayloadType,
@@ -186,10 +186,15 @@ impl TxPayloadExtract {
 
     fn extract_writesetpayload_scriptpayload(&self) -> Result<&ScriptPayload, TxPayloadError> {
         match self.extract_writesetpayload()? {
-            WriteSet::ScriptWriteSet(sws) => match &sws.script {
-                Some(script) => Ok(script),
-                None => Err(TxPayloadError::ScriptPayloadMissingCode),
-            },
+            WriteSet::ScriptWriteSet(sws) => {
+                match &sws.script {
+                    Some(script) => Ok(script),
+                    None => {
+                        warn!("ScriptPayloadMissingCode err from `extract_writesetpayload_scriptpayload`");
+                        Err(TxPayloadError::ScriptPayloadMissingCode)
+                    }
+                }
+            }
             _ => Err(TxPayloadError::NoScriptPayloadInWriteSetPayload),
         }
     }
@@ -198,19 +203,28 @@ impl TxPayloadExtract {
         let mmbytecode = match &self.payload_data {
             Some(TxPayloadData::ScriptPayload(data)) => match &data.code {
                 Some(mmbytecode) => mmbytecode,
-                None => return Err(TxPayloadError::ScriptPayloadMissingCode),
+                None => {
+                    warn!("ScriptPayloadMissingCode err from `code` w/ ScriptPayload");
+                    return Err(TxPayloadError::ScriptPayloadMissingCode);
+                }
             },
             Some(TxPayloadData::WriteSetPayload(_)) => {
                 match &self.extract_writesetpayload_scriptpayload()?.code {
                     Some(code) => code,
-                    None => return Err(TxPayloadError::ScriptPayloadMissingCode),
+                    None => {
+                        warn!("ScriptPayloadMissingCode err from `code` w/ WriteSetPayload");
+                        return Err(TxPayloadError::ScriptPayloadMissingCode);
+                    }
                 }
             }
             _ => {
                 if self.is_genesis_scriptwriteset() {
                     match &self.extract_writesetpayload_scriptpayload()?.code {
                         Some(code) => code,
-                        None => return Err(TxPayloadError::ScriptPayloadMissingCode),
+                        None => {
+                            warn!("ScriptPayloadMissingCode err from `code` w/ genesis_scriptwriteset");
+                            return Err(TxPayloadError::ScriptPayloadMissingCode);
+                        }
                     }
                 } else {
                     return Ok(None);
@@ -222,14 +236,17 @@ impl TxPayloadExtract {
             abi: match &mmbytecode.abi {
                 Some(fxn) => match Function::try_from(fxn) {
                     Ok(abi) => match abi.try_into() {
-                        Ok(abi_fnrep) => abi_fnrep,
+                        Ok(abi_fnrep) => Some(abi_fnrep),
                         Err(error) => {
                             return Err(TxPayloadError::FailedBuildingMoveScriptAbi(error))
                         }
                     },
                     Err(err) => return Err(TxPayloadError::FailedBuildingMoveScriptAbi(err)),
                 },
-                None => return Err(TxPayloadError::ScriptPayloadMissingCode),
+                None => {
+                    info!("`code` w/ missing abi");
+                    None
+                }
             },
         };
 

@@ -197,10 +197,7 @@ pub fn get_failed_transaction(
         vm_status: Some(tx.tx_info.vm_status.clone()),
         accumulator_root_hash: Some(tx.tx_info.accumulator_root_hash.encode()),
         sequence_number: tx.tx_data.sequence_number().unwrap_or(None),
-        max_gas_amount: match tx.tx_data.max_gas_amount() {
-            Ok(maxgas) => maxgas,
-            Err(_) => None,
-        },
+        max_gas_amount: tx.tx_data.max_gas_amount().unwrap_or_default(),
         sender: match tx.tx_data.sender() {
             Ok(Some(addr)) => match addr.try_encode() {
                 Ok(encoded_addr) => Some(encoded_addr),

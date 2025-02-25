@@ -9,7 +9,7 @@ const MOVETYPE_PREFIX: &str = "MOVE_TYPES_";
 #[derive(Debug, Clone)]
 pub enum MoveTypeError {
     UnspecifiedMoveTypeError,
-    MoveTypeDecodeError(prost::DecodeError, i32),
+    MoveTypeDecodeError(prost::UnknownEnumValue, i32),
     LackedPrefix(String),
     MissingContent(input_protos::MoveTypes),
     Unparsable(String),

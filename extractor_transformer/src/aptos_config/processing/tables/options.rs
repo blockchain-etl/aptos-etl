@@ -36,6 +36,34 @@ impl TableOptions {
     }
 
     #[inline]
+    pub const fn new_all_false() -> Self {
+        Self {
+            blocks: Some(false),
+            transactions: Some(false),
+            events: Some(false),
+            changes: Some(false),
+            modules: Some(false),
+            table_items: Some(false),
+            resource: Some(false),
+            signatures: Some(false),
+        }
+    }
+
+    #[inline]
+    pub const fn new_all_none() -> Self {
+        Self {
+            blocks: None,
+            transactions: None,
+            events: None,
+            changes: None,
+            modules: None,
+            table_items: None,
+            resource: None,
+            signatures: None,
+        }
+    }
+
+    #[inline]
     pub fn do_blocks(&self) -> bool {
         self.blocks.unwrap_or(false)
     }
