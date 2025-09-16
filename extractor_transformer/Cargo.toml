@@ -31,6 +31,7 @@ dotenvy = "0.15.7"
 base64 = "0.21.5"
 borsh = "0.10.3"
 hex = "0.4"
+base64ct = "<1.8"
 
 # METRICS
 prometheus = { version = "0.13.3", optional = true }

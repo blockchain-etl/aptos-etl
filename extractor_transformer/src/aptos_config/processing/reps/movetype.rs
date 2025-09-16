@@ -207,6 +207,12 @@ impl TryEncode<String> for MoveType {
                 ) => Ok(format!("T{}", index)), //Ok(Ability::try_from(*index+1)?.try_encode()?),
                 (
                     input_protos::MoveTypes::Unparsable,
+                    Some(input_protos::move_type::Content::Unparsable(s)),
+                ) if s == "function" => {
+                    Ok("function".to_string())
+                }
+                (
+                    input_protos::MoveTypes::Unparsable,
                     Some(input_protos::move_type::Content::Unparsable(badstring)),
                 ) => Err(MoveTypeError::Unparsable(badstring.clone())),
                 (mvtype, _) => Err(MoveTypeError::UnsupportedAdvMoveType(*mvtype)),

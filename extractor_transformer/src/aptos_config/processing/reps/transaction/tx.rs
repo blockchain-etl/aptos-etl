@@ -12,6 +12,8 @@ use aptos_protos::transaction::v1::{
     transaction::{TransactionType, TxnData},
 };
 
+use log::warn;
+
 #[derive(Debug, Clone)]
 pub enum TxExtractionError {
     MissingTimeStamp,
@@ -136,8 +138,19 @@ impl TryFrom<input_protos::Transaction> for TransactionExtraction {
             (tx_type @ TransactionType::Validator, Some(tx_data @ TxnData::Validator(_))) => {
                 (tx_type, tx_data)
             }
+            (
+                           tx_type @ TransactionType::BlockEpilogue,
+                           Some(tx_data @ TxnData::BlockEpilogue(epilogue)),
+                       ) => (tx_type, tx_data),
             (_, None) => return Err(TxExtractionError::MissingData),
-            (_, Some(_)) => return Err(TxExtractionError::InvalidData),
+            (tx_type, Some(data)) => {
+                log::error!(
+                    "Encountered incompatible tx type/data: {:?} & {:?}",
+                    tx_type,
+                    data
+                );
+                return Err(TxExtractionError::InvalidData);
+            }
         };
         // Extract the TxnInfo
         let tx_info = match &value.info {
