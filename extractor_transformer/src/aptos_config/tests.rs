@@ -49,7 +49,7 @@ impl ExampleRange {
     pub fn get_tx(
         &self,
         version: u64,
-    ) -> Result<aptos_protos::transaction::v1::Transaction, ExampleRangeError> {
+    ) -> Result<aptos_indexer_processor_sdk::aptos_protos::transaction::v1::Transaction, ExampleRangeError> {
         let path = self.dir.join(format!("txs/{}.pb", version));
 
         // Validate path exists, and is a file.

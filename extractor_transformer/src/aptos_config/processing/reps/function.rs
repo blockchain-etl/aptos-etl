@@ -7,7 +7,7 @@ use super::super::traits::{FromVec, FromVecRef};
 use super::generictypeparam::{GenericTypeParam, GenericTypeParamError};
 use super::movetype::{MoveType, MoveTypeError};
 use super::visibility::{IntermediateVisibility, VisibilityError};
-use aptos_protos::transaction::v1::MoveFunction;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1::MoveFunction;
 use log::error;
 
 #[derive(Debug, Clone)]

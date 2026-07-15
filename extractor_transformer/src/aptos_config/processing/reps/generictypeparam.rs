@@ -5,7 +5,7 @@ use super::super::super::proto_codegen::aptos::modules::module::{
     exposed_function::GenericFunctionTypeParams, r#struct::GenericStructTypeParams,
 };
 use super::abilties::{Ability, AbilityError};
-use aptos_protos::transaction::v1::{
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1::{
     self as input_protos, MoveFunctionGenericTypeParam, MoveStructGenericTypeParam,
 };
 use log::error;
@@ -122,23 +122,23 @@ impl From<MoveStructGenericTypeParam> for GenericTypeParam {
     }
 }
 
-impl TryFrom<Vec<input_protos::MoveType>> for GenericTypeParam {
-    type Error = GenericTypeParamError;
-    #[inline]
-    fn try_from(value: Vec<input_protos::MoveType>) -> Result<Self, Self::Error> {
-        match value
-            .iter()
-            .map(|move_type| Ability::try_from(move_type.clone()))
-            .collect::<Result<Vec<Ability>, AbilityError>>()
-        {
-            Ok(abilities) => Ok(Self::from(abilities)),
-            Err(ability_err) => {
-                error!("Failed converting MoveType to GenericTypeParam");
-                Err(ability_err.into())
-            }
-        }
-    }
-}
+// impl TryFrom<Vec<aptos_indexer_processor_sdk::aptos_protos::transaction::v1::MoveType> for GenericTypeParam {
+//     type Error = GenericTypeParamError;
+//     #[inline]
+//     fn try_from(value: Vec<aptos_indexer_processor_sdk::aptos_protos::transaction::v1::MoveType>) -> Result<Self, Self::Error> {
+//         match value
+//             .iter()
+//             .map(|move_type| Ability::try_from(move_type.clone()))
+//             .collect::<Result<Vec<Ability>, AbilityError>>()
+//         {
+//             Ok(abilities) => Ok(Self::from(abilities)),
+//             Err(ability_err) => {
+//                 error!("Failed converting MoveType to GenericTypeParam");
+//                 Err(ability_err.into())
+//             }
+//         }
+//     }
+// }
 
 impl<T> From<Vec<T>> for GenericTypeParam
 where

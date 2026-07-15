@@ -1,7 +1,7 @@
 // use crate::blockchain_config::proto_codegen::transactions::transaction::payload::code::Abi;
 use crate::blockchain_config::processing::traits::Encode;
 use crate::blockchain_config::proto_codegen::aptos::modules::module::Struct;
-use aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
 
 use super::super::traits::{FromVec, FromVecRef, TryEncode};
 use super::abilties::{Ability, AbilityError};

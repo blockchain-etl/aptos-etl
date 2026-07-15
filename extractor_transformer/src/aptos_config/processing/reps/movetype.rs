@@ -1,7 +1,7 @@
 use super::super::traits::{FromVec, FromVecRef, TryEncode};
 use super::abilties::AbilityError;
 use super::structtag::{StructTag, StructTagError};
-use aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
 
 /// The prefix which we want to remove from the movetype.
 const MOVETYPE_PREFIX: &str = "MOVE_TYPES_";
@@ -149,9 +149,8 @@ impl TryEncode<String> for MoveType {
                 input_protos::MoveTypes::Reference
                 | input_protos::MoveTypes::GenericTypeParam
                 | input_protos::MoveTypes::Struct
-                | input_protos::MoveTypes::Vector
-                | input_protos::MoveTypes::Unparsable => {
-                    return Err(MoveTypeError::MissingContent(*self.movetype()))
+                | input_protos::MoveTypes::Vector => {
+                    Err(MoveTypeError::MissingContent(*self.movetype()))
                 }
                 // Try to strip the prefix.  If it didn't we, need to examine
                 // the specific case

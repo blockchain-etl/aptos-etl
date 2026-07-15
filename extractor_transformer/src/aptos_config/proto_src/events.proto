@@ -10,11 +10,13 @@ message Event {
     required uint64 tx_version = 3;
     required string tx_hash = 4;
     optional uint64 tx_sequence_number = 5;
+    optional string tx_sequence_number_big = 13;
     required uint64 event_index = 6;
     required string event_type = 7;
     required string address = 8;
     required uint64 creation_num = 9;
     required uint64 sequence_number = 10;
+    // optional string sequence_number_big = 14;
     required string data = 11;
     required aptos.common.UnixTimestamp block_unixtimestamp = 12;
 

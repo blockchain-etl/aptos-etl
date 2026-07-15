@@ -21,7 +21,7 @@ use crate::blockchain_config::processing::reps::structtag::StructTagError;
 use crate::blockchain_config::proto_codegen::aptos::modules::module::{
     ExposedFunction, Friend, Struct,
 };
-use aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
 
 #[derive(Debug, Clone)]
 pub enum ChangeError {
@@ -159,7 +159,15 @@ pub fn get_changes(tx: &TransactionExtraction) -> Result<ChangeRecords, ChangeEr
 
     let timestamp = tx.get_encoded_timestamp()?;
     let hash = tx.get_encoded_hash();
-    let tx_seqnum = tx.tx_data.sequence_number()?;
+    // let tx_seqnum = tx.tx_data.sequence_number()?;
+
+    let (tx_sequence_number, tx_sequence_number_big) = match tx.tx_data.sequence_number()? {
+        Some(number) => match i64::try_from(number) {
+            Ok(_) => (Some(number), Some(number.to_string())),
+            Err(_) => (None, Some(number.to_string())),
+        },
+        None => (None, None),
+    };
 
     // Iterate through all the IncompleteChangeRecord
     for (index, change) in changes.iter().enumerate() {
@@ -173,7 +181,8 @@ pub fn get_changes(tx: &TransactionExtraction) -> Result<ChangeRecords, ChangeEr
             block_timestamp: timestamp.clone(),
             tx_version: tx.version,
             tx_hash: hash.clone(),
-            tx_sequence_number: tx.tx_data.sequence_number()?,
+            tx_sequence_number,
+            tx_sequence_number_big: tx_sequence_number_big.clone(),
             change_index,
             change_type: chtype.into(),
             address: Some(addr.clone()),
@@ -244,7 +253,8 @@ pub fn get_changes(tx: &TransactionExtraction) -> Result<ChangeRecords, ChangeEr
                 block_timestamp: timestamp.clone(),
                 tx_version: tx.version,
                 tx_hash: hash.clone(),
-                tx_sequence_number: tx_seqnum,
+                tx_sequence_number,
+                tx_sequence_number_big: tx_sequence_number_big.clone(),
                 change_index,
                 address: resource.address.try_encode()?,
                 state_key_hash: state_key_hash.clone(),
@@ -267,7 +277,8 @@ pub fn get_changes(tx: &TransactionExtraction) -> Result<ChangeRecords, ChangeEr
                 block_timestamp: timestamp.clone(),
                 tx_version: tx.version,
                 tx_hash: hash.clone(),
-                tx_sequence_number: tx_seqnum,
+                tx_sequence_number,
+                tx_sequence_number_big: tx_sequence_number_big.clone(),
                 change_index,
                 address: tableitem.handle.try_encode()?,
                 state_key_hash: state_key_hash.clone(),

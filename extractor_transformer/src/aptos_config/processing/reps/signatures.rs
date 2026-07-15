@@ -7,8 +7,8 @@ use super::address::{Address, AddressError};
 use super::hashval::HashValue;
 use super::publickey::{PublicKeyError, PublicKeyExtract};
 use super::sigvalue::{SigValueError, SigValueExtraction};
-use aptos_protos::transaction::v1 as input_protos;
-use aptos_protos::transaction::v1::signature::Type as SigType;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1::signature::Type as SigType;
 
 #[derive(Debug, Clone)]
 pub enum SignatureError {
@@ -480,7 +480,7 @@ impl SignatureSubRecord {
         Ok(subrecords)
     }
 
-    pub fn from_abstractionsignature(value: input_protos::AbstractionSignature) -> Result<SignatureSubRecord, SignatureError> {
+    pub fn from_abstractionsignature(value: input_protos::AbstractSignature) -> Result<SignatureSubRecord, SignatureError> {
         Ok(SignatureSubRecord {
             buildtype: Deferred::Deferred,
             public_key: PublicKey {

@@ -4,8 +4,9 @@
 // I wish cargo-fmt sorted these such that all of the actix_web imports could be together...
 #[cfg(feature = "ORCHESTRATED")]
 use actix_web::{web, HttpResponse};
+use backon::{ExponentialBuilder, Retryable};
 use clap::{Args, Parser, Subcommand};
-use log::{error, info};
+use log::{error, info, warn};
 use std::error::Error;
 #[cfg(not(feature = "ORCHESTRATED"))]
 use std::fs::{create_dir, read_dir, File};
@@ -358,23 +359,36 @@ async fn main() -> Result<(), Box<dyn Error>> {
         Commands::IndexSubscription(args) => {
             let subscription_arg = args.subscription;
 
-            let gcp_config = match dotenvy::var("GOOGLE_APPLICATION_CREDENTIALS") {
-                Ok(env_var) => {
-                    let key_path = env_var.parse::<String>().unwrap();
-                    let cred_file = CredentialsFile::new_from_file(key_path.to_owned())
-                        .await
-                        .expect("GCP credentials file exists");
-                    // authenticate using the key file
-                    ClientConfig::default()
-                        .with_credentials(cred_file)
-                        .await
-                        .unwrap()
-                }
-                Err(_) => ClientConfig::default().with_auth().await.unwrap(),
+            let gcp_client_retryable = || async {
+                let gcp_config = match dotenvy::var("GOOGLE_APPLICATION_CREDENTIALS") {
+                    Ok(env_var) => {
+                        let key_path = env_var.parse::<String>().unwrap();
+                        let cred_file = CredentialsFile::new_from_file(key_path.to_owned())
+                            .await
+                            .expect("GCP credentials file exists");
+                        // authenticate using the key file
+                        ClientConfig::default()
+                            .with_credentials(cred_file)
+                            .await
+                            .unwrap()
+                    }
+                    Err(_) => ClientConfig::default().with_auth().await.unwrap(),
+                };
+                Client::new(gcp_config).await
             };
 
             // Attempt to create the client using the configuration from above
-            let gcp_client = Client::new(gcp_config).await.unwrap();
+            let gcp_client = gcp_client_retryable
+                .retry(ExponentialBuilder::default().with_jitter())
+                .sleep(tokio::time::sleep)
+                .notify(|e, t| {
+                    warn!(
+                        "failed to authenticate with GCP: {:?}, retrying in {:?} seconds...",
+                        e, t
+                    )
+                })
+                .await
+                .expect("backon::retry only returns Ok(T)");
             let subscription = gcp_client.subscription(&subscription_arg);
 
             let publisher = StreamPublisher::new().await;

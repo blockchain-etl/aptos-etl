@@ -5,7 +5,7 @@ use super::{
     movetype::{MoveType, MoveTypeError},
 };
 use crate::aptos_config::proto_codegen::json::{events::Event, JsonObjectString};
-use aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
 use log::error;
 
 #[derive(Debug, Clone)]
@@ -128,6 +128,7 @@ impl<'de> serde::Deserialize<'de> for Event {
                 let mut tx_version = None;
                 let mut tx_hash = None;
                 let mut tx_sequence_number = None;
+                let mut tx_sequence_number_big = None;
                 let mut event_index = None;
                 let mut event_type = None;
                 let mut address = None;
@@ -142,7 +143,38 @@ impl<'de> serde::Deserialize<'de> for Event {
                         "block_timestamp" => block_timestamp = Some(map.next_value()?),
                         "tx_version" => tx_version = Some(map.next_value()?),
                         "tx_hash" => tx_hash = Some(map.next_value()?),
-                        "tx_sequence_number" => tx_sequence_number = Some(map.next_value()?),
+                        "tx_sequence_number" => {
+                            if let Some(num) = map.next_value::<Option<u64>>()? {
+                                match i64::try_from(num) {
+                                    Ok(_) => {
+                                        tx_sequence_number = Some(num);
+                                        if tx_sequence_number_big.is_none() {
+                                            tx_sequence_number_big = Some(num.to_string());
+                                        }
+                                    }
+                                    Err(_) => {
+                                        if tx_sequence_number_big.is_none() {
+                                            tx_sequence_number_big = Some(num.to_string());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        "tx_sequence_number_big" => {
+                            if let Some(s) = map.next_value::<Option<String>>()? {
+                                match str::parse::<i64>(&s) {
+                                    Ok(num) => {
+                                        tx_sequence_number_big = Some(s);
+                                        if tx_sequence_number.is_none() {
+                                            tx_sequence_number = Some(num as u64);
+                                        }
+                                    }
+                                    Err(_) => {
+                                        tx_sequence_number_big = Some(s);
+                                    }
+                                }
+                            }
+                        }
                         "event_index" => event_index = Some(map.next_value()?),
                         "event_type" => event_type = Some(map.next_value()?),
                         "address" => address = Some(map.next_value()?),
@@ -182,6 +214,7 @@ impl<'de> serde::Deserialize<'de> for Event {
                     tx_version,
                     tx_hash,
                     tx_sequence_number,
+                    tx_sequence_number_big,
                     event_index,
                     event_type,
                     address,
@@ -201,6 +234,7 @@ impl<'de> serde::Deserialize<'de> for Event {
                 "tx_version",
                 "tx_hash",
                 "tx_sequence_number",
+                "tx_sequence_number_big",
                 "event_index",
                 "event_type",
                 "address",

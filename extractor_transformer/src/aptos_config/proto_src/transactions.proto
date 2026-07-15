@@ -23,6 +23,7 @@ message Transaction {
         multisig = 4;
         writeset = 5;
         genesis_writeset = 6;
+        encrypted_transaction = 7;
     }
 
     message ChangesAggregate {
@@ -76,6 +77,7 @@ message Transaction {
     optional string vm_status = 11;
     optional string accumulator_root_hash = 12;
     optional uint64 sequence_number = 13;
+    optional string sequence_number_big = 25;
     optional uint64 max_gas_amount = 14;
     optional string sender = 15;
     optional uint64 num_events = 16;

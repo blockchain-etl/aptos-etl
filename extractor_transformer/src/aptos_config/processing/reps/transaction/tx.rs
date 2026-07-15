@@ -7,11 +7,10 @@ use super::{
     tx_data::{TxDataExtract, TxDataExtractError},
     tx_info::{TransactionInfoExtraction, TxInfoExtractionError},
 };
-use aptos_protos::transaction::v1::{
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1::{
     self as input_protos,
     transaction::{TransactionType, TxnData},
 };
-
 use log::warn;
 
 #[derive(Debug, Clone)]
@@ -139,9 +138,9 @@ impl TryFrom<input_protos::Transaction> for TransactionExtraction {
                 (tx_type, tx_data)
             }
             (
-                           tx_type @ TransactionType::BlockEpilogue,
-                           Some(tx_data @ TxnData::BlockEpilogue(epilogue)),
-                       ) => (tx_type, tx_data),
+                tx_type @ TransactionType::BlockEpilogue,
+                Some(tx_data @ TxnData::BlockEpilogue(epilogue)),
+            ) => (tx_type, tx_data),
             (_, None) => return Err(TxExtractionError::MissingData),
             (tx_type, Some(data)) => {
                 log::error!(

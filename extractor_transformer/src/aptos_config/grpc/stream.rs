@@ -1,4 +1,10 @@
 // Standard imports
+use aptos_indexer_processor_sdk::aptos_indexer_transaction_stream::config::{
+    Endpoint, ReconnectionConfig,
+};
+use aptos_indexer_processor_sdk::aptos_indexer_transaction_stream::utils::additional_headers::AdditionalHeaders;
+use aptos_indexer_processor_sdk::aptos_indexer_transaction_stream::TransactionStreamConfig;
+use aptos_indexer_processor_sdk::aptos_protos::indexer::v1::TransactionsResponse;
 use std::num::ParseIntError;
 use std::{ffi::OsString, time::Duration};
 // Other imports
@@ -10,8 +16,8 @@ use super::environment::{
     get_auth_token, get_auth_token_fallback, get_ping_interval, get_ping_timeout, get_project_name,
     get_service_address, get_service_address_fallback,
 };
-use aptos_protos::indexer::v1::TransactionsResponse;
-use processor::grpc_stream::get_stream as get_aptos_stream;
+use aptos_indexer_processor_sdk::aptos_indexer_transaction_stream::transaction_stream::get_stream as get_aptos_stream;
+// use aptos_protos::indexer::v1::TransactionsResponse;
 
 ///  Explains the error occuring during the stream
 #[derive(Debug)]
@@ -46,24 +52,44 @@ pub async fn get_stream_response(
         addr, interval, timeout, projname
     );
 
-    let result = task::spawn(async move {
-        get_aptos_stream(
-            addr,
-            interval,
-            timeout,
-            Duration::from_secs(5),
-            start,
-            Some(end),
-            auth,
-            projname.clone(),
-        )
-        .await
-    });
+    let stream_config: TransactionStreamConfig = TransactionStreamConfig {
+        indexer_grpc_data_service_address: addr,
+        starting_version: Some(start),
+        request_ending_version: Some(end),
+        auth_token: Some(auth),
+        indexer_grpc_http2_ping_interval_secs: interval.as_secs(),
+        indexer_grpc_http2_ping_timeout_secs: timeout.as_secs(),
+        indexer_grpc_response_item_timeout_secs: timeout.as_secs(),
+        reconnection_config: ReconnectionConfig {
+            timeout_secs: timeout.as_secs(),
+            max_retries: 5,
+            ..ReconnectionConfig::default()
+        },
+        request_name_header: projname,
+        additional_headers: AdditionalHeaders::default(),
+        transaction_filter: None,
+        backup_endpoints: match get_service_address_fallback() {
+            Some(fallback_addr) => vec![Endpoint {
+                address: fallback_addr,
+                auth_token: get_auth_token_fallback().clone(),
+                is_primary: false,
+            }],
+            None => Vec::new(),
+        },
+        primary_failback_interval_secs: TransactionStreamConfig::default_primary_failback_interval(
+        ),
+    };
+
+    let result = task::spawn(async move { get_aptos_stream(stream_config).await });
 
     match result.await {
-        Ok(response) => {
+        Ok(Ok(response)) => {
             debug!("[creating a stream] Received a response: {:?}", response);
             Ok(response)
+        }
+        Ok(Err(err)) => {
+            error!("[creating a stream] Received an error response: {:?}", err);
+            Err(StreamCreationError::BadResponse)
         }
         Err(error) => {
             if error.is_panic() {
@@ -81,24 +107,38 @@ pub async fn get_stream_response(
                     let projname = String::from(get_project_name());
                     let auth_fb = get_auth_token_fallback().clone().unwrap_or_default();
 
-                    let result = task::spawn(async move {
-                        get_aptos_stream(
-                            fallback_addr,
-                            interval,
-                            timeout,
-                            Duration::from_secs(5),
-                            start,
-                            Some(end),
-                            auth_fb,
-                            projname,
-                        )
-                        .await
-                    });
+                    let stream_config_fb: TransactionStreamConfig = TransactionStreamConfig {
+                        indexer_grpc_data_service_address: fallback_addr,
+                        starting_version: Some(start),
+                        request_ending_version: Some(end),
+                        auth_token: Some(auth_fb),
+                        indexer_grpc_http2_ping_interval_secs: interval.as_secs(),
+                        indexer_grpc_http2_ping_timeout_secs: timeout.as_secs(),
+                        indexer_grpc_response_item_timeout_secs: timeout.as_secs(),
+                        reconnection_config: ReconnectionConfig {
+                            timeout_secs: timeout.as_secs(),
+                            max_retries: 5,
+                            ..ReconnectionConfig::default()
+                        },
+                        request_name_header: projname,
+                        additional_headers: AdditionalHeaders::default(),
+                        transaction_filter: None,
+                        backup_endpoints: Vec::new(),
+                        primary_failback_interval_secs:
+                            TransactionStreamConfig::default_primary_failback_interval(),
+                    };
+
+                    let result =
+                        task::spawn(async move { get_aptos_stream(stream_config_fb).await });
 
                     match result.await {
-                        Ok(response) => {
+                        Ok(Ok(response)) => {
                             info!("[creating a stream] Received response from fallback, but not original");
                             Ok(response)
+                        }
+                        Ok(Err(err)) => {
+                            error!("[creating a stream] Aptos get_stream failed with fallback as well: {:?}", err);
+                            Err(StreamCreationError::BadResponse)
                         }
                         Err(err) => {
                             if err.is_panic() {

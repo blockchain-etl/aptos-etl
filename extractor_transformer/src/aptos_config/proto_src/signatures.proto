@@ -24,6 +24,8 @@ message Signature {
             secp256k1_ecdsa = 3;
             secp256r1_ecdsa = 4;
             keyless = 5;
+            federated_keyless = 6;
+            slh_dsa_sha2_128s = 7;
         }
 
         required string type = 1;
@@ -40,6 +42,7 @@ message Signature {
             webauthn = 4;
             zkid = 5;
             keyless = 6;
+            slh_dsa_sha2_128s = 7;
         }
 
         required string type = 1;

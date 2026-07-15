@@ -1,7 +1,7 @@
 use super::super::changes::{ChangeError, IncompleteChangeRecord};
 use super::super::hashval::HashValue;
 use crate::blockchain_config::proto_codegen::aptos::transactions::transaction::ChangesAggregate;
-use aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
 
 #[derive(Debug, Clone)]
 pub enum TxInfoExtractionError {

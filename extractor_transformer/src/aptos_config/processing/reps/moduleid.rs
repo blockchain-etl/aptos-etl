@@ -1,6 +1,6 @@
 use super::address::{Address, AddressError};
 use crate::blockchain_config::processing::traits::{Encode, FromVec, FromVecRef, TryEncode};
-use aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
 
 /// Any error occuring when dealing with `MoveModuleId`s
 #[derive(Debug, Clone)]

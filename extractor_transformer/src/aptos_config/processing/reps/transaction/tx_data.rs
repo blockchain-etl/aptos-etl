@@ -2,7 +2,7 @@ use super::super::address::Address;
 use super::super::payload::{TxPayloadError, TxPayloadExtract};
 use super::super::timestamp::{Timestamp, TimestampError};
 use crate::blockchain_config::processing::{reps::address::AddressError, traits::TryEncode};
-use aptos_protos::transaction::v1::{
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1::{
     self as input_protos,
     transaction::{TransactionType, TxnData},
 };

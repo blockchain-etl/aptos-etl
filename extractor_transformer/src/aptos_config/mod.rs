@@ -3,6 +3,7 @@ pub mod grpc;
 pub mod processing;
 #[allow(clippy::module_inception)]
 pub mod proto_codegen;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1::Transaction;
 use processing::reps::transaction::tx::{TransactionExtraction, TxExtractionError};
 use proto_codegen::aptos::pubsub_range::TableOptions;
 use std::io::Write;
@@ -216,7 +217,7 @@ pub async fn extract_txs(
     start: u64,
     end: u64,
     outdir: Option<PathBuf>,
-) -> Result<Vec<aptos_protos::transaction::v1::Transaction>, ExtractionInteruptionError> {
+) -> Result<Vec<Transaction>, ExtractionInteruptionError> {
     info!("Attempting to extract transactions [{}, {}]", start, end);
 
     // Saves the current version
@@ -246,7 +247,7 @@ pub async fn extract_txs(
     };
 
     // Create transactions vec
-    let mut txs: Vec<aptos_protos::transaction::v1::Transaction> = Vec::new();
+    let mut txs: Vec<aptos_indexer_processor_sdk::aptos_protos::transaction::v1::Transaction> = Vec::new();
 
     // Create a stream and extract the txs
     loop {
@@ -324,7 +325,7 @@ pub async fn extract_txs(
 
 /// Transforms transactions
 pub async fn transform_txs(
-    txs: Vec<aptos_protos::transaction::v1::Transaction>,
+    txs: Vec<aptos_indexer_processor_sdk::aptos_protos::transaction::v1::Transaction>,
     outdir: Option<&PathBuf>,
     publisher: Option<blockchain_generic::output::publish::StreamPublisher>,
 ) -> Result<Vec<proto_codegen::aptos::records::Records>, ExtractError> {
@@ -624,6 +625,7 @@ pub async fn extract_range(
 
     let table_options = match table_options {
         Some(tbl_opts) => tbl_opts,
+        // None => TableOptions::new_all(),
         None => TableOptions::new_all(),
     };
 
@@ -1016,7 +1018,7 @@ pub async fn extract_range(
 
 /// Given a [PathBuf] pointing to a file containing a [aptos_protos::transaction::v1::Transaction] as
 /// a serialized protobuf.
-pub fn load_tx(path: &PathBuf) -> Result<aptos_protos::transaction::v1::Transaction, ExtractError> {
+pub fn load_tx(path: &PathBuf) -> Result<aptos_indexer_processor_sdk::aptos_protos::transaction::v1::Transaction, ExtractError> {
     match File::open(path.clone()) {
         Ok(mut file) => {
             let mut bytes: Vec<u8> = Vec::new();
@@ -1029,7 +1031,7 @@ pub fn load_tx(path: &PathBuf) -> Result<aptos_protos::transaction::v1::Transact
                 }
             }
             // Decode the bytes into a Transaction
-            match aptos_protos::transaction::v1::Transaction::decode(&*bytes) {
+            match aptos_indexer_processor_sdk::aptos_protos::transaction::v1::Transaction::decode(&*bytes) {
                 Ok(tx) => Ok(tx),
                 Err(error) => {
                     error!(

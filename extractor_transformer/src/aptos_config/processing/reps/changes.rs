@@ -8,7 +8,7 @@ use super::address::Address;
 use super::hashval::HashValue;
 use super::moduleid::ModuleId;
 use super::structtag::{StructTag, StructTagError};
-use aptos_protos::transaction::v1::{
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1::{
     self as input_protos, write_set_change::Change as ChangeData,
     write_set_change::Type as ChangeType,
 };
@@ -232,6 +232,7 @@ impl<'de> serde::Deserialize<'de> for Resource {
                 let mut tx_version = None;
                 let mut tx_hash = None;
                 let mut tx_sequence_number = None;
+                let mut tx_sequence_number_big = None;
                 let mut change_index = None;
                 let mut address = None;
                 let mut state_key_hash = None;
@@ -248,6 +249,7 @@ impl<'de> serde::Deserialize<'de> for Resource {
                         "tx_version" => tx_version = Some(map.next_value()?),
                         "tx_hash" => tx_hash = Some(map.next_value()?),
                         "tx_sequence_number" => tx_sequence_number = Some(map.next_value()?),
+                        "tx_sequence_number_big" => tx_sequence_number = Some(map.next_value()?),
                         "change_index" => change_index = Some(map.next_value()?),
                         "address" => address = Some(map.next_value()?),
                         "state_key_hash" => state_key_hash = Some(map.next_value()?),
@@ -287,6 +289,7 @@ impl<'de> serde::Deserialize<'de> for Resource {
                     tx_version,
                     tx_hash,
                     tx_sequence_number,
+                    tx_sequence_number_big,
                     change_index,
                     address,
                     state_key_hash,

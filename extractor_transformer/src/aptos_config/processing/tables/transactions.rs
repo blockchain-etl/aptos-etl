@@ -84,6 +84,14 @@ pub fn get_successful_transaction(
         }
     };
 
+    let (sequence_number, sequence_number_big) = match tx.tx_data.sequence_number()? {
+        Some(number) => match i64::try_from(number) {
+            Ok(_) => (Some(number), Some(number.to_string())),
+            Err(_) => (None, Some(number.to_string())),
+        },
+        None => (None, None),
+    };
+
     Ok(Transaction {
         block_height: tx.blockheight,
         block_timestamp: tx.get_encoded_timestamp()?,
@@ -101,7 +109,8 @@ pub fn get_successful_transaction(
         success: tx.tx_info.success,
         vm_status: Some(tx.tx_info.vm_status.clone()),
         accumulator_root_hash: Some(tx.tx_info.accumulator_root_hash.encode()),
-        sequence_number: tx.tx_data.sequence_number()?,
+        sequence_number,
+        sequence_number_big,
         max_gas_amount: tx.tx_data.max_gas_amount()?,
         sender: match tx.tx_data.sender()? {
             Some(addr) => Some(addr.try_encode()?),
@@ -165,18 +174,20 @@ pub fn get_failed_transaction(
         match tx.tx_data.payload() {
             Ok(None) => (None, None),
             Ok(Some(extract)) => {
-                let payload = match extract.try_encode() {
-                    Ok(payload) => Some(payload),
-                    Err(_) => None,
-                };
-                let payload_type = match extract.encode_payload_type() {
-                    Ok(payload_type) => Some(payload_type),
-                    Err(_) => None,
-                };
+                let payload = extract.try_encode().ok();
+                let payload_type = extract.encode_payload_type().ok();
                 (payload, payload_type)
             }
             Err(_) => (None, None),
         }
+    };
+
+    let (sequence_number, sequence_number_big) = match tx.tx_data.sequence_number()? {
+        Some(number) => match i64::try_from(number) {
+            Ok(_) => (Some(number), Some(number.to_string())),
+            Err(_) => (None, Some(number.to_string())),
+        },
+        None => (None, None),
     };
 
     Ok(Transaction {
@@ -196,7 +207,8 @@ pub fn get_failed_transaction(
         success: tx.tx_info.success,
         vm_status: Some(tx.tx_info.vm_status.clone()),
         accumulator_root_hash: Some(tx.tx_info.accumulator_root_hash.encode()),
-        sequence_number: tx.tx_data.sequence_number().unwrap_or(None),
+        sequence_number,
+        sequence_number_big,
         max_gas_amount: tx.tx_data.max_gas_amount().unwrap_or_default(),
         sender: match tx.tx_data.sender() {
             Ok(Some(addr)) => match addr.try_encode() {

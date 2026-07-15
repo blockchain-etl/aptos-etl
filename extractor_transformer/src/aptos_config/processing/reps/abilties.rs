@@ -3,7 +3,7 @@ use super::{
     super::traits::{FromVec, FromVecRef, TryEncode},
     movetype::MoveTypeError,
 };
-use aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
 use prost::UnknownEnumValue;
 
 const ABILITY_PREFIX: &str = "MOVE_ABILITY_";

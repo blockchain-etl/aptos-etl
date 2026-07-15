@@ -53,12 +53,22 @@ pub fn get_events(tx: &TransactionExtraction) -> Result<Option<Vec<Event>>, Even
             for (index, event) in events.iter().enumerate() {
                 let extraction = EventExtraction::try_from(event.clone())?;
 
+                let (tx_sequence_number, tx_sequence_number_big) =
+                    match tx.tx_data.sequence_number()? {
+                        Some(number) => match i64::try_from(number) {
+                            Ok(_) => (Some(number), Some(number.to_string())),
+                            Err(_) => (None, Some(number.to_string())),
+                        },
+                        None => (None, None),
+                    };
+
                 records.push(Event {
                     block_height: tx.blockheight,
                     block_timestamp: timestamp.clone(),
                     tx_version: tx.version,
                     tx_hash: hash.clone(),
-                    tx_sequence_number: tx.tx_data.sequence_number()?,
+                    tx_sequence_number,
+                    tx_sequence_number_big,
                     event_index: index as u64,
                     address: extraction.address.try_encode()?,
                     event_type: extraction.type_str.clone(),

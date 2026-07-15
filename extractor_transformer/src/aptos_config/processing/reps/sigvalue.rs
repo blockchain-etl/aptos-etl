@@ -5,8 +5,8 @@
 use super::super::super::proto_codegen::aptos::signatures::signature::{
     signature::SignatureType as SigType, Signature as SigValue,
 };
-use aptos_protos::transaction::v1 as input_protos;
-use aptos_protos::transaction::v1::any_signature::SignatureVariant;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1::any_signature::SignatureVariant;
 
 use super::super::traits::Encode;
 use super::hashval::HashValue;
@@ -54,6 +54,7 @@ impl SigValueExtraction {
             input_protos::any_signature::Type::Secp256k1Ecdsa => Ok(SigType::Secp256k1Ecdsa),
             input_protos::any_signature::Type::Keyless => Ok(SigType::Keyless),
             input_protos::any_signature::Type::Webauthn => Ok(SigType::Webauthn),
+            input_protos::any_signature::Type::SlhDsaSha2128s => Ok(SigType::SlhDsaSha2128s),
             input_protos::any_signature::Type::Unspecified => Err(SigValueError::Unspecified),
             #[allow(unreachable_patterns)] // Future proofing for protobuf updates
             other => Err(SigValueError::UnmappedType(other)),
@@ -72,6 +73,9 @@ impl TryFrom<&input_protos::AnySignature> for SigValueExtraction {
                     secp256k1ecdsa.signature.clone().into()
                 }
                 Some(SignatureVariant::Webauthn(webauth)) => webauth.signature.clone().into(),
+                Some(SignatureVariant::SlhDsaSha2128s(slh_dsa)) => {
+                    slh_dsa.signature.clone().into()
+                }
                 None => return Err(SigValueError::UnsupportedSignatureVariant),
             },
             sigvaltype: value.r#type(),

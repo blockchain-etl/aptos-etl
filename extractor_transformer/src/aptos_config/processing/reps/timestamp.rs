@@ -3,7 +3,7 @@ use std::env;
 
 use super::super::super::proto_codegen::aptos::common::UnixTimestamp;
 use crate::blockchain_config::processing::traits::{Encode, TryEncode};
-use aptos_protos::util::timestamp::Timestamp as InputTimestamp;
+use aptos_indexer_processor_sdk::aptos_protos::util::timestamp::Timestamp as InputTimestamp;
 use chrono::{DateTime, Utc};
 use log::{error, info};
 use once_cell::sync::OnceCell;

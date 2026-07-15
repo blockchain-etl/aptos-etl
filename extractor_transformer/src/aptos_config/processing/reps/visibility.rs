@@ -1,4 +1,4 @@
-use aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
 
 use super::super::super::proto_codegen::aptos::common::Visibility as output_visibility;
 use super::super::traits::TryEncode;

@@ -16,7 +16,7 @@ use crate::{
         proto_codegen::aptos::common::UnixTimestamp,
     },
 };
-use aptos_protos::transaction::v1::Transaction as AptosTx;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1::Transaction as AptosTx;
 use log::debug;
 
 pub trait StoresRecords<T> {

@@ -1,4 +1,4 @@
-use aptos_protos::transaction::v1::{
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1::{
     transaction_payload::Payload as TxPayloadData, transaction_payload::Type as TxPayloadType,
     write_set::WriteSet, ScriptPayload, TransactionPayload,
 };
@@ -92,6 +92,9 @@ impl TxPayloadExtract {
             Some(TxPayloadType::MultisigPayload) => Ok(PayloadType::Multisig.into()),
             Some(TxPayloadType::ScriptPayload) => Ok(PayloadType::Script.into()),
             Some(TxPayloadType::WriteSetPayload) => Ok(PayloadType::Writeset.into()),
+            Some(TxPayloadType::EncryptedTransactionPayload) => {
+                Ok(PayloadType::EncryptedTransaction.into())
+            }
             // Outdated, from old protos
             // Some(TxPayloadType::ModuleBundlePayload) => Ok(PayloadType::ModuleBundle.into()),
             Some(TxPayloadType::Unspecified) => Err(TxPayloadError::UnspecifiedPayloadType),
@@ -338,6 +341,14 @@ impl TryFrom<TransactionPayload> for TxPayloadExtract {
             (
                 txtype @ TxPayloadType::WriteSetPayload,
                 Some(txdata @ TxPayloadData::WriteSetPayload(_)),
+            ) => Ok(TxPayloadExtract {
+                payload_type: Some(txtype),
+                payload_data: Some(txdata),
+                genesis_payload: None,
+            }),
+            (
+                txtype @ TxPayloadType::EncryptedTransactionPayload,
+                Some(txdata @ TxPayloadData::EncryptedTransactionPayload(_)),
             ) => Ok(TxPayloadExtract {
                 payload_type: Some(txtype),
                 payload_data: Some(txdata),

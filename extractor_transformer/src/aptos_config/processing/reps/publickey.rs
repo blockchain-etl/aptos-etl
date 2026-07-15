@@ -3,7 +3,7 @@ use super::super::super::proto_codegen::aptos::signatures::signature::{
 };
 use super::super::traits::Encode;
 use super::hashval::HashValue;
-use aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
 
 #[derive(Debug, Clone)]
 pub enum PublicKeyError {
@@ -38,6 +38,12 @@ impl PublicKeyExtract {
             input_protos::any_public_key::Type::Secp256k1Ecdsa => Ok(PublicKeyType::Secp256k1Ecdsa),
             input_protos::any_public_key::Type::Keyless => Ok(PublicKeyType::Keyless),
             input_protos::any_public_key::Type::Secp256r1Ecdsa => Ok(PublicKeyType::Secp256r1Ecdsa),
+            input_protos::any_public_key::Type::FederatedKeyless => {
+                Ok(PublicKeyType::FederatedKeyless)
+            }
+            input_protos::any_public_key::Type::SlhDsaSha2128s => {
+                Ok(PublicKeyType::SlhDsaSha2128s)
+            }
             input_protos::any_public_key::Type::Unspecified => Err(PublicKeyError::Unspecified),
             #[allow(unreachable_patterns)]
             other => Err(PublicKeyError::UnmappedType(other)),

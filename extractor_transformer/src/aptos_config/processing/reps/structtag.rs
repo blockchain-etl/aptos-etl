@@ -7,7 +7,7 @@ use super::address::{Address, AddressError};
 use super::generictypeparam::GenericTypeParamError;
 use super::moduleid::ModuleName;
 use super::movetype::{MoveType, MoveTypeError};
-use aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
 
 #[derive(Debug, Clone)]
 pub struct StructName {

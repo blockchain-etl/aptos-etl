@@ -3,7 +3,7 @@ use super::function::{Function, FunctionError};
 use super::moduleid::{ModuleId, ModuleName, MoveModuleIdError};
 use super::mvstruct::{MvStruct, MvStructError};
 use crate::blockchain_config::processing::traits::FromVecRef;
-use aptos_protos::transaction::v1 as input_protos;
+use aptos_indexer_processor_sdk::aptos_protos::transaction::v1 as input_protos;
 
 #[derive(Debug, Clone)]
 pub enum ModuleError {
